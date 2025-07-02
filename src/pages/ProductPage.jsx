@@ -28,6 +28,7 @@ const Layout = styled.div`
   }
 `;
 
+
 const Image = styled.img`
   width: 100%;
   max-width: 480px;

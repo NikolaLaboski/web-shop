@@ -1,29 +1,41 @@
+// src/components/Header.jsx
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { FaShoppingCart } from "react-icons/fa";
 import styled from "styled-components";
 import { useCart } from "../context/CartContext";
 import CartOverlay from "./CartOverlay";
+import Logo from "../assets/logo.svg";
 
-// Styled components
+// Styled Components
 const HeaderWrapper = styled.header`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 20px 40px;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: #fff;
   border-bottom: 1px solid #e0e0e0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  flex-wrap: wrap;
 `;
 
-const Logo = styled.h1`
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #1a1a1a;
-`;
-
-const Nav = styled.nav`
+const Left = styled.nav`
   display: flex;
-  gap: 24px;
+  gap: 16px;
+  flex: 1;
+`;
+
+const Center = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: center;
+`;
+
+const Right = styled.div`
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  position: relative;
 `;
 
 const NavItem = styled(NavLink)`
@@ -33,7 +45,7 @@ const NavItem = styled(NavLink)`
   position: relative;
 
   &.active {
-    color: #007bff;
+    color: #5ECE7B;
     font-weight: 600;
   }
 
@@ -44,15 +56,19 @@ const NavItem = styled(NavLink)`
     left: 0;
     width: 100%;
     height: 2px;
-    background-color: #007bff;
+    background-color: #5ECE7B;
   }
 `;
 
+const LogoImage = styled.img`
+  height: 32px;
+`;
+
 const CartButton = styled.button`
-  position: relative;
   background: none;
   border: none;
   cursor: pointer;
+  position: relative;
 `;
 
 const CartCount = styled.span`
@@ -74,16 +90,14 @@ const CartCount = styled.span`
 const Header = () => {
   const location = useLocation();
   const [showCart, setShowCart] = useState(false);
-  const categories = ["Apparel", "Footwear", "Electronics", "Accessories"];
+  const categories = ["Women", "Men", "Kids"];
   const { cartItems } = useCart();
   const cartCount = cartItems.length;
 
   return (
     <>
       <HeaderWrapper>
-        <Logo>My eCommerce App</Logo>
-
-        <Nav>
+        <Left>
           {categories.map((category) => {
             const path = `/category/${category.toLowerCase()}`;
             const isActive = location.pathname === path;
@@ -101,15 +115,24 @@ const Header = () => {
               </NavItem>
             );
           })}
-        </Nav>
+        </Left>
 
-        <CartButton data-testid="cart-btn" onClick={() => setShowCart(!showCart)}>
-          <FaShoppingCart size={22} />
-          {cartCount > 0 && <CartCount>{cartCount}</CartCount>}
-        </CartButton>
+        <Center>
+          <LogoImage src={Logo} alt="Logo" />
+        </Center>
+
+        <Right>
+          <CartButton
+            data-testid="cart-btn"
+            onClick={() => setShowCart((prev) => !prev)}
+          >
+            <FaShoppingCart size={22} />
+            {cartCount > 0 && <CartCount>{cartCount}</CartCount>}
+          </CartButton>
+        </Right>
       </HeaderWrapper>
 
-      {showCart && <CartOverlay />}
+      {showCart && <CartOverlay onClose={() => setShowCart(false)} />}
     </>
   );
 };

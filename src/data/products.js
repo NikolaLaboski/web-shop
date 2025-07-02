@@ -2,7 +2,7 @@ const products = [
   {
     id: 1,
     name: "T-Shirt Basic",
-    category: "Apparel",
+    category: "Women",
     price: 19.99,
     image: "/images/tshirt.jpg",
     inStock: true,
@@ -15,7 +15,7 @@ const products = [
   {
     id: 2,
     name: "Sneakers Pro",
-    category: "Footwear",
+    category: "Men",
     price: 79.99,
     image: "/images/sneakers.jpg",
     inStock: false,
@@ -28,7 +28,7 @@ const products = [
   {
     id: 3,
     name: "Wireless Headphones",
-    category: "Electronics",
+    category: "Kids",
     price: 59.99,
     image: "/images/headphones.jpg",
     inStock: true,
@@ -40,7 +40,7 @@ const products = [
   {
     id: 4,
     name: "Backpack Urban",
-    category: "Accessories",
+    category: "Men",
     price: 34.99,
     image: "/images/backpack.jpg",
     inStock: true,
@@ -52,7 +52,7 @@ const products = [
   {
     id: 5,
     name: "Classic Watch",
-    category: "Accessories",
+    category: "Kids",
     price: 99.99,
     image: "/images/watch.jpg",
     inStock: false,
