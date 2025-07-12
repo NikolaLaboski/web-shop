@@ -1,9 +1,10 @@
 // src/components/Header.jsx
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { FaShoppingCart } from "react-icons/fa";
 import styled from "styled-components";
 import { useCart } from "../context/CartContext";
+import CartIcon from "../assets/cart.svg";
+
 import CartOverlay from "./CartOverlay";
 import Logo from "../assets/logo.svg";
 
@@ -46,7 +47,6 @@ const NavItem = styled(NavLink)`
 
   &.active {
     color: #5ECE7B;
-    font-weight: 600;
   }
 
   &.active::after {
@@ -65,17 +65,29 @@ const LogoImage = styled.img`
 `;
 
 const CartButton = styled.button`
-  background: none;
+  background: white;
   border: none;
+  padding: 8px;
   cursor: pointer;
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: #1d1f22;
+    stroke-width: 1.5;
+  }
 `;
 
 const CartCount = styled.span`
   position: absolute;
-  top: -8px;
-  right: -8px;
-  background: #e60023;
+  top: -6px;
+  right: -6px;
+  background: #1d1f22;
   color: white;
   font-size: 10px;
   font-weight: bold;
@@ -126,7 +138,8 @@ const Header = () => {
             data-testid="cart-btn"
             onClick={() => setShowCart((prev) => !prev)}
           >
-            <FaShoppingCart size={22} />
+           <img src={CartIcon} alt="Cart Icon" width={20} height={20} />
+
             {cartCount > 0 && <CartCount>{cartCount}</CartCount>}
           </CartButton>
         </Right>
@@ -138,3 +151,4 @@ const Header = () => {
 };
 
 export default Header;
+

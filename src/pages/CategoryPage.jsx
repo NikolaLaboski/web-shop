@@ -6,29 +6,6 @@ import { useCart } from "../context/CartContext";
 import products from "../data/products";
 
 // Styled Components
-
-// Inside styled-components section
-
-const CategoryTitle = styled.h2`
-  font-size: 24px;
-  font-weight: 400;
-  color: #1D1F22;
-  margin-bottom: 12px;
-  text-align: left;
-  grid-column: span 3;
-
-  @media (max-width: 1024px) {
-    grid-column: span 2;
-  }
-
-  @media (max-width: 640px) {
-    grid-column: span 1;
-    font-size: 20px;
-  }
-`;
-
-
-
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -45,6 +22,20 @@ const Grid = styled.div`
   }
 `;
 
+const CategoryTitle = styled.h2`
+  font-size: 24px;
+  font-weight: 400;
+  color: #1D1F22;
+  margin: 24px 0 12px 0;
+  padding-left: 48px;
+
+  @media (max-width: 640px) {
+    padding-left: 20px;
+    font-size: 20px;
+  }
+`;
+
+
 const CardWrapper = styled.div`
   position: relative;
   width: 100%;
@@ -60,6 +51,10 @@ const CardWrapper = styled.div`
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  a {
+    text-decoration: none;
   }
 `;
 
@@ -116,14 +111,6 @@ const ProductPrice = styled.p`
   margin: 0;
 `;
 
-
-
-const ProductImageWrapper = styled.div`
-  position: relative;
-`;
-
-
-
 const CategoryPage = () => {
   const { categoryName } = useParams();
   const { addToCart } = useCart();
@@ -134,30 +121,32 @@ const CategoryPage = () => {
       product.category.toLowerCase() === categoryName?.toLowerCase()
   );
 
+  const capitalizedCategory =
+    categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
+
   return (
-    
     <>
-    <Grid>
-  <CategoryTitle>{categoryName}</CategoryTitle>
+      <CategoryTitle>{capitalizedCategory}</CategoryTitle>
+      <Grid>
+        
+        {filteredProducts.map((product) => (
+          <CardWrapper key={product.id}>
+            <AddToCartButton onClick={() => addToCart(product)} title="Add to Cart">
+              <FaShoppingCart />
+            </AddToCartButton>
 
-  {filteredProducts.map((product) => (
-    <CardWrapper key={product.id}>
-      <AddToCartButton onClick={() => addToCart(product)} title="Add to Cart">
-        <FaShoppingCart />
-      </AddToCartButton>
-      <Link to={`/product/${product.id}`}>
-        <ProductImage src={product.image} alt={product.name} />
-        <ProductContent>
-          <ProductName>{product.name}</ProductName>
-          <ProductPrice>${product.price.toFixed(2)}</ProductPrice>
-        </ProductContent>
-      </Link>
-    </CardWrapper>
-  ))}
-</Grid>
-  </>
-    );
-
+            <Link to={`/product/${product.id}`}>
+              <ProductImage src={product.image} alt={product.name} />
+              <ProductContent>
+                <ProductName>{product.name}</ProductName>
+                <ProductPrice>${product.price.toFixed(2)}</ProductPrice>
+              </ProductContent>
+            </Link>
+          </CardWrapper>
+        ))}
+      </Grid>
+    </>
+  );
 };
 
 export default CategoryPage;
