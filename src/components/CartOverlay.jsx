@@ -22,7 +22,14 @@ const Overlay = styled.div`
   padding: 24px;
   border-radius: 8px;
   box-shadow: 0px 4px 16px rgba(0, 0, 0, 0.15);
+
+  @media (max-width: 480px) {
+    width: 90%;
+    right: 5%;
+    padding: 16px;
+  }
 `;
+
 
 const CloseBtn = styled.button`
   position: absolute;
@@ -50,7 +57,14 @@ const Product = styled.div`
   display: flex;
   justify-content: space-between;
   margin-bottom: 32px;
+  gap: 16px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
+
 
 const Left = styled.div`
   display: flex;
@@ -59,19 +73,30 @@ const Left = styled.div`
   width: 60%;
 `;
 
-const Right = styled.div`
+const RightWrapper = styled.div`
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 `;
+
 
 const Img = styled.img`
   width: 120px;
   height: 160px;
   object-fit: cover;
-  margin-top: 8px;
+
+  @media (max-width: 480px) {
+    width: 100px;
+    height: 140px;
+  }
 `;
+
 
 const Name = styled.div`
   font-size: 16px;
@@ -95,9 +120,11 @@ const SizeOptions = styled.div`
 
 const SizeBox = styled.div`
   padding: 4px 8px;
-  border: 1px solid #1D1F22;
+  border: 1px solid ${({ selected }) => (selected ? "#1D1F22" : "#ccc")};
   font-size: 12px;
-  cursor: default;
+  background: ${({ selected }) => (selected ? "#1D1F22" : "white")};
+  color: ${({ selected }) => (selected ? "white" : "#1D1F22")};
+  cursor: pointer;
 `;
 
 const ColorOptions = styled.div`
@@ -109,7 +136,8 @@ const ColorBox = styled.div`
   width: 16px;
   height: 16px;
   background-color: ${(props) => props.color || "#ccc"};
-  border: 1px solid #1D1F22;
+  border: 2px solid ${({ selected }) => (selected ? "#5ECE7B" : "#1D1F22")};
+  cursor: pointer;
 `;
 
 const Controls = styled.div`
@@ -162,8 +190,15 @@ const OrderButton = styled.button`
   }
 `;
 
+// ... [imports and styles stay the same]
+
 const CartOverlay = ({ onClose }) => {
-  const { cartItems, incrementQuantity, decrementQuantity } = useCart();
+  const {
+    cartItems,
+    incrementQuantity,
+    decrementQuantity,
+    updateAttribute,
+  } = useCart();
 
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const total = cartItems.reduce(
@@ -176,45 +211,106 @@ const CartOverlay = ({ onClose }) => {
       <Backdrop onClick={onClose} />
       <Overlay>
         <CloseBtn onClick={onClose}>×</CloseBtn>
-        <Header>My Bag, {totalItems} {totalItems === 1 ? "item" : "items"}</Header>
+        <Header>
+          My Bag, {totalItems} {totalItems === 1 ? "item" : "items"}
+        </Header>
 
         {cartItems.length === 0 ? (
           <p>No items in cart.</p>
         ) : (
           <>
-            {cartItems.map((item) => (
-              <Product key={item.id}>
-                <Left>
-                  <Name>{item.name}</Name>
-                  <Price>${item.price.toFixed(2)}</Price>
+            {cartItems.map((item, index) => {
+              const selectedSize = item.selectedAttributes?.Size;
+              const selectedColor = item.selectedAttributes?.Color;
+              const sizes = item.attributes?.Size || [];
+              const colors = item.attributes?.Color || [];
 
-                  <AttributeTitle>Size:</AttributeTitle>
-                  <SizeOptions>
-                    {["XS", "S", "M", "L"].map((size) => (
-                      <SizeBox key={size}>{size}</SizeBox>
-                    ))}
-                  </SizeOptions>
+              const key = `${item.id}-${selectedSize || "?"}-${selectedColor || "?"}-${index}`;
 
-                  <AttributeTitle>Color:</AttributeTitle>
-                  <ColorOptions>
-                    {["#f0f0f0", "#000", "#0f6657"].map((color, idx) => (
-                      <ColorBox key={idx} color={color} />
-                    ))}
-                  </ColorOptions>
-                </Left>
+              return (
+                <Product key={key}>
+                  <Left>
+                    <Name>{item.name}</Name>
+                    <Price>${item.price.toFixed(2)}</Price>
 
-                <Right>
-                  <Controls>
-                    <QtyBtn onClick={() => incrementQuantity(item.id)}>+</QtyBtn>
-                    <Amount>{item.quantity}</Amount>
-                    <QtyBtn onClick={() => decrementQuantity(item.id)}>-</QtyBtn>
-                  </Controls>
-                  <Img src={item.image} alt={item.name} />
-                </Right>
-              </Product>
-            ))}
+                    {sizes.length > 0 && (
+                      <>
+                        <AttributeTitle>Size:</AttributeTitle>
+                        <SizeOptions data-testid="cart-item-attribute-size">
+                          {sizes.map((size) => (
+                            <SizeBox
+                              key={size}
+                              selected={selectedSize === size}
+                              data-testid={
+                                selectedSize === size
+                                  ? `cart-item-attribute-size-${size.toLowerCase()}-selected`
+                                  : `cart-item-attribute-size-${size.toLowerCase()}`
+                              }
+                              onClick={() =>
+                                updateAttribute(item.id, "Size", size)
+                              }
+                            >
+                              {size}
+                            </SizeBox>
+                          ))}
+                        </SizeOptions>
+                      </>
+                    )}
 
-            <Total>Total: ${total.toFixed(2)}</Total>
+                    {colors.length > 0 && (
+                      <>
+                        <AttributeTitle>Color:</AttributeTitle>
+                        <ColorOptions data-testid="cart-item-attribute-color">
+                          {colors.map((color) => {
+                            const colorKey = color.replace("#", "").toLowerCase();
+                            const isSelected = selectedColor === color;
+
+                            return (
+                              <ColorBox
+                                key={color}
+                                color={color}
+                                selected={isSelected}
+                                data-testid={
+                                  isSelected
+                                    ? `cart-item-attribute-color-${colorKey}-selected`
+                                    : `cart-item-attribute-color-${colorKey}`
+                                }
+                                onClick={() =>
+                                  updateAttribute(item.id, "Color", color)
+                                }
+                              />
+                            );
+                          })}
+                        </ColorOptions>
+                      </>
+                    )}
+                  </Left>
+
+                  <RightWrapper>
+                    <Controls>
+                      <QtyBtn
+                        onClick={() => incrementQuantity(item.id)}
+                        data-testid="cart-item-amount-increase"
+                      >
+                        +
+                      </QtyBtn>
+                      <Amount data-testid="cart-item-amount">
+                        {item.quantity}
+                      </Amount>
+                      <QtyBtn
+                        onClick={() => decrementQuantity(item.id)}
+                        data-testid="cart-item-amount-decrease"
+                      >
+                        −
+                      </QtyBtn>
+                    </Controls>
+                    <Img src={item.image} alt={item.name} />
+                  </RightWrapper>
+                </Product>
+              );
+            })}
+
+            <Total data-testid="cart-total">Total: ${total.toFixed(2)}</Total>
             <OrderButton disabled={cartItems.length === 0}>
               PLACE ORDER
             </OrderButton>
@@ -226,3 +322,4 @@ const CartOverlay = ({ onClose }) => {
 };
 
 export default CartOverlay;
+

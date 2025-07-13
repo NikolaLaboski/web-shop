@@ -6,22 +6,52 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState(() => {
     const stored = localStorage.getItem("cartItems");
     return stored ? JSON.parse(stored) : [];
-  }); 
+  });
 
-  const addToCart = (product) => {
-    setCartItems((prev) => {
-      const existing = prev.find((item) => item.id === product.id);
-      if (existing) {
-        return prev.map((item) =>
-          item.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        return [...prev, { ...product, quantity: 1 }];
-      }
-    });
+ const addToCart = (product, selectedAttributes = {}) => {
+  const defaultAttributes = {
+    Size: ["XS", "S", "M", "L"],
+    Color: ["#f0f0f0", "#000", "#0f6657"],
   };
+
+  const attributes = product.attributes ?? defaultAttributes;
+
+  // Осигурај дека selectedAttributes има и Size и Color (дури и ако се null)
+  const filledSelected = {
+    Size: selectedAttributes.Size ?? null,
+    Color: selectedAttributes.Color ?? null,
+  };
+
+  setCartItems((prev) => {
+    const existing = prev.find(
+      (item) =>
+        item.id === product.id &&
+        JSON.stringify(item.selectedAttributes) ===
+          JSON.stringify(filledSelected)
+    );
+
+    if (existing) {
+      return prev.map((item) =>
+        item.id === product.id &&
+        JSON.stringify(item.selectedAttributes) ===
+          JSON.stringify(filledSelected)
+          ? { ...item, quantity: item.quantity + 1 }
+          : item
+      );
+    } else {
+      return [
+        ...prev,
+        {
+          ...product,
+          quantity: 1,
+          selectedAttributes: filledSelected,
+          attributes,
+        },
+      ];
+    }
+  });
+};
+
 
   const incrementQuantity = (id) => {
     setCartItems((prev) =>
@@ -41,13 +71,35 @@ export const CartProvider = ({ children }) => {
     );
   };
 
+  const updateAttribute = (id, key, value) => {
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              selectedAttributes: {
+                ...item.selectedAttributes,
+                [key]: value,
+              },
+            }
+          : item
+      )
+    );
+  };
+
   useEffect(() => {
     localStorage.setItem("cartItems", JSON.stringify(cartItems));
   }, [cartItems]);
 
   return (
     <CartContext.Provider
-      value={{ cartItems, addToCart, incrementQuantity, decrementQuantity }}
+      value={{
+        cartItems,
+        addToCart,
+        incrementQuantity,
+        decrementQuantity,
+        updateAttribute,
+      }}
     >
       {children}
     </CartContext.Provider>

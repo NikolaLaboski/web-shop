@@ -35,7 +35,6 @@ const CategoryTitle = styled.h2`
   }
 `;
 
-
 const CardWrapper = styled.div`
   position: relative;
   width: 100%;
@@ -51,6 +50,11 @@ const CardWrapper = styled.div`
   &:hover {
     transform: translateY(-3px);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+
+    button {
+      opacity: 1;
+      visibility: visible;
+    }
   }
 
   a {
@@ -84,9 +88,9 @@ const AddToCartButton = styled.button`
     font-size: 14px;
   }
 
-  &:hover {
-    background-color: #45c768;
-  }
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
 `;
 
 const ProductContent = styled.div`
@@ -124,26 +128,48 @@ const CategoryPage = () => {
   const capitalizedCategory =
     categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
 
+  const defaultAttributes = {
+    Size: ["XS", "S", "M", "L"],
+    Color: ["#f0f0f0", "#000", "#0f6657"]
+  };
+
   return (
     <>
       <CategoryTitle>{capitalizedCategory}</CategoryTitle>
       <Grid>
-        
-        {filteredProducts.map((product) => (
-          <CardWrapper key={product.id}>
-            <AddToCartButton onClick={() => addToCart(product)} title="Add to Cart">
-              <FaShoppingCart />
-            </AddToCartButton>
+        {filteredProducts.map((product) => {
+          const kebabName = product.name.toLowerCase().replace(/\s+/g, "-");
 
-            <Link to={`/product/${product.id}`}>
-              <ProductImage src={product.image} alt={product.name} />
-              <ProductContent>
-                <ProductName>{product.name}</ProductName>
-                <ProductPrice>${product.price.toFixed(2)}</ProductPrice>
-              </ProductContent>
-            </Link>
-          </CardWrapper>
-        ))}
+          return (
+            <CardWrapper key={product.id} data-testid={`product-${kebabName}`}>
+              <AddToCartButton
+                onClick={() =>
+                  addToCart(
+                    {
+                      ...product,
+                      attributes: defaultAttributes
+                    },
+                    {
+                      Size: defaultAttributes.Size[0],
+                      Color: defaultAttributes.Color[0]
+                    }
+                  )
+                }
+                title="Add to Cart"
+              >
+                <FaShoppingCart />
+              </AddToCartButton>
+
+              <Link to={`/product/${product.id}`}>
+                <ProductImage src={product.image} alt={product.name} />
+                <ProductContent>
+                  <ProductName>{product.name}</ProductName>
+                  <ProductPrice>${product.price.toFixed(2)}</ProductPrice>
+                </ProductContent>
+              </Link>
+            </CardWrapper>
+          );
+        })}
       </Grid>
     </>
   );
