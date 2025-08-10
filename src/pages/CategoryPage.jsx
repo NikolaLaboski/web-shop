@@ -1,11 +1,38 @@
+// CategoryPage.jsx
+// Lists products by category (or all) and allows quick "add to cart" from the grid.
+// Data - GraphQL GET_PRODUCTS query (id, name, category, gallery, prices, attributes).
+
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import styled from "styled-components";
 import { FaShoppingCart } from "react-icons/fa";
 import { useCart } from "../context/CartContext";
-import products from "../data/products";
+import { useQuery, gql } from "@apollo/client";
 
-// Styled Components
+// GraphQL query: fetches all products with minimal fields used here.
+const GET_PRODUCTS = gql`
+  query {
+    products {
+      id
+      name
+      category
+      gallery
+      prices {
+        amount
+      }
+      attributes {
+        name
+        type
+        items {
+          displayValue
+          value
+        }
+      }
+    }
+  }
+`;
+
+// Responsive grid for product cards.
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -35,6 +62,7 @@ const CategoryTitle = styled.h2`
   }
 `;
 
+// Product card with hoverable add-to-cart button.
 const CardWrapper = styled.div`
   position: relative;
   width: 100%;
@@ -119,19 +147,24 @@ const CategoryPage = () => {
   const { categoryName } = useParams();
   const { addToCart } = useCart();
 
-  const filteredProducts = products.filter(
-    (product) =>
-      product.category &&
-      product.category.toLowerCase() === categoryName?.toLowerCase()
-  );
+  // Query all products; simple client-side filter by category.
+  const { data, loading, error } = useQuery(GET_PRODUCTS);
 
+  // Display title in "Capitalized" form.
   const capitalizedCategory =
     categoryName.charAt(0).toUpperCase() + categoryName.slice(1);
 
-  const defaultAttributes = {
-    Size: ["XS", "S", "M", "L"],
-    Color: ["#f0f0f0", "#000", "#0f6657"]
-  };
+  if (loading) return <p style={{ padding: "48px" }}>Loading...</p>;
+  if (error) return <p style={{ padding: "48px" }}>Error: {error.message}</p>;
+
+  // If category is "all" show everything; else match by product.category (case-insensitive).
+  const filteredProducts = categoryName.toLowerCase() === "all"
+    ? data.products
+    : data.products.filter(
+        (product) =>
+          product.category &&
+          product.category.toLowerCase() === categoryName?.toLowerCase()
+      );
 
   return (
     <>
@@ -139,32 +172,36 @@ const CategoryPage = () => {
       <Grid>
         {filteredProducts.map((product) => {
           const kebabName = product.name.toLowerCase().replace(/\s+/g, "-");
+          const price = product.prices?.[0]?.amount ?? 0;
 
           return (
             <CardWrapper key={product.id} data-testid={`product-${kebabName}`}>
+              {/* Quick add-to-cart from the grid; uses a default attribute pick. */}
               <AddToCartButton
                 onClick={() =>
-                  addToCart(
-                    {
-                      ...product,
-                      attributes: defaultAttributes
+                  addToCart({
+                    ...product,
+                    selectedAttributes: {
+                      Size: "M",
+                      Color: "Red",
                     },
-                    {
-                      Size: defaultAttributes.Size[0],
-                      Color: defaultAttributes.Color[0]
-                    }
-                  )
+                    attributes: product.attributes || [],
+                  })
                 }
                 title="Add to Cart"
               >
                 <FaShoppingCart />
               </AddToCartButton>
 
+              {/* Navigate to the product details page on click */}
               <Link to={`/product/${product.id}`}>
-                <ProductImage src={product.image} alt={product.name} />
+                <ProductImage
+                  src={product.gallery?.[0] || `https://via.placeholder.com/220x220.png?text=${encodeURIComponent(product.name)}`}
+                  alt={product.name}
+                />
                 <ProductContent>
                   <ProductName>{product.name}</ProductName>
-                  <ProductPrice>${product.price.toFixed(2)}</ProductPrice>
+                  <ProductPrice>${price.toFixed(2)}</ProductPrice>
                 </ProductContent>
               </Link>
             </CardWrapper>
@@ -176,4 +213,3 @@ const CategoryPage = () => {
 };
 
 export default CategoryPage;
-

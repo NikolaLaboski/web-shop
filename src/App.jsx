@@ -1,23 +1,74 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import Header from './components/Header';
-import CategoryPage from './pages/CategoryPage';
-import ProductPage from './pages/ProductPage';
-import CheckoutPage from './pages/CheckoutPage';
+import React, { useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
+import Header from "./components/Header";
+import CategoryPage from "./pages/CategoryPage";
+import ProductPage from "./pages/ProductPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import CartOverlay from "./components/CartOverlay";
+
+import { gql, useMutation } from "@apollo/client";
+import { useCart } from "./context/CartContext"; 
+
+const CREATE_ORDER = gql`
+  mutation CreateOrder($customer_name: String!, $products: [OrderItemInput!]!, $total_price: Float!) {
+    createOrder(customer_name: $customer_name, products: $products, total_price: $total_price)
+  }
+`;
+
+/**
+ * TestOrderPage
+ * NOTE: Mounted page triggers a createOrder mutation.
+ * We will conditionally register this route only in non-production builds.
+ */
+const TestOrderPage = () => {
+  const [createOrder] = useMutation(CREATE_ORDER);
+
+  useEffect(() => {
+    createOrder({
+      variables: {
+        customer_name: "Nikola Laboski",
+        products: [
+          { product_id: 1, quantity: 2 },
+          { product_id: 2, quantity: 1 }
+        ],
+        total_price: 59.97
+      }
+    })
+    .then(res => console.log(" ORDER SUCCESS:", res.data.createOrder))
+    .catch(err => console.error(" ORDER ERROR:", err));
+  }, []);
+
+  return (
+    <div>
+      <h1>Testing createOrder mutation</h1>
+      <p>Check the console.</p>
+    </div>
+  );
+};
 
 const App = () => {
+  const { showCart, setShowCart } = useCart();
+
   return (
     <div>
       <Header />
-      <Routes>
-        <Route path="/" element={<Navigate to="/category/women" />} />
+      {/* Overlay */}
+      {showCart && <CartOverlay onClose={() => setShowCart(false)} />}
 
-        <Route path="/category" element={<Navigate to="/category/women" />} />
+      <Routes>
+        {/* Default redirects */}
+        <Route path="/" element={<Navigate to="/category/all" />} />
+        <Route path="/category" element={<Navigate to="/category/all" />} />
+
+        {/* Main routes */}
         <Route path="/category/:categoryName" element={<CategoryPage />} />
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
 
-        {/* подоцна ќе додадеме ProductPage и CartOverlay */}
+        {/* Dev-only route: exclude from production bundles */}
+        {process.env.NODE_ENV !== "production" && (
+          <Route path="/test" element={<TestOrderPage />} />
+        )}
       </Routes>
     </div>
   );
