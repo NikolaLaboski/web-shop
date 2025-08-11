@@ -143,6 +143,14 @@ const ProductPrice = styled.p`
   margin: 0;
 `;
 
+function toKebab(s) {
+  return String(s)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-");
+}
+
 function getDefaultSelections(attributes = []) {
   const selected = {};
   attributes.forEach((set) => {
@@ -182,7 +190,7 @@ const CategoryPage = () => {
           return (
             <CardWrapper
               key={product.id}
-              data-testid={`product-${product.id.toLowerCase()}`} // ✅ fixed
+              data-testid={`product-${product.id.toLowerCase()}`}
             >
               {inStock && (
                 <AddToCartButton
