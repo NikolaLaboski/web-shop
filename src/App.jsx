@@ -53,18 +53,16 @@ const App = () => {
       
 <Routes>
   <Route path="/" element={<Navigate to="/all" />} />
+  <Route path="/category" element={<Navigate to="/all" />} />
 
-  {/* експлицитни рути за тестовите */}
-  <Route path="/all" element={<CategoryPage />} />
-  <Route path="/tech" element={<CategoryPage />} />
-  <Route path="/clothes" element={<CategoryPage />} />
-
-  {/* задржи ја и старата шема ако ја користиш на друго место */}
+  {/* both forms work */}
+  <Route path="/:categoryName" element={<CategoryPage />} />
   <Route path="/category/:categoryName" element={<CategoryPage />} />
 
   <Route path="/product/:id" element={<ProductPage />} />
   <Route path="/checkout" element={<CheckoutPage />} />
 </Routes>
+
 
 
    
