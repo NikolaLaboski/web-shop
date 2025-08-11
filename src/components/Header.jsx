@@ -94,22 +94,21 @@ const Header = () => {
       <Left>
   {categories.map((category) => {
     const path = `/${category.toLowerCase()}`;
+    const isActive = location.pathname === path; // проверка за активна рута
     return (
       <NavItem
         to={path}
         key={category}
-        className={({ isActive }) => (isActive ? "active" : "")}
+        className={isActive ? "active" : ""}
+        data-testid={isActive ? "active-category-link" : "category-link"}
         end
       >
-        {({ isActive }) => (
-          <span data-testid={isActive ? "active-category-link" : "category-link"}>
-            {category.toUpperCase()}
-          </span>
-        )}
+        {category.toUpperCase()}
       </NavItem>
     );
   })}
 </Left>
+
 
 
       <Center>
