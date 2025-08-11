@@ -7,12 +7,26 @@ import styled from "styled-components";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
+// was: inset: 0; (го покриваше и header-от)
 const Backdrop = styled.div`
   position: fixed;
-  inset: 0;
+  left: 0;
+  right: 0;
+  top: 80px;     /* header height – овде НЕ го прекриваме header-от */
+  bottom: 0;
   background: rgba(57, 55, 72, 0.22);
   z-index: 998;
 `;
+
+// was:
+// position: fixed;
+// inset: 0;
+// z-index: 997;
+
+const Container = styled.div`
+  /* Keep this always mounted; visibility via inline style on the element */
+`;
+
 
 const OverlayPanel = styled.div`
   position: fixed;
@@ -34,12 +48,7 @@ const OverlayPanel = styled.div`
   }
 `;
 
-const Container = styled.div`
-  /* Always mounted in DOM; we toggle visibility with style display:none/block */
-  position: fixed;
-  inset: 0;
-  z-index: 997; /* below Backdrop(998) and Panel(999) */
-`;
+
 
 const CloseBtn = styled.button`
   position: absolute;

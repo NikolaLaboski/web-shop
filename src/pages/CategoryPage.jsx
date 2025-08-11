@@ -152,9 +152,10 @@ const ProductPrice = styled.p`
 
 function toKebab(s) {
   return String(s)
+    .trim()
     .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, ""); // clean special chars like in iPhone
+    .replace(/[^a-z0-9\s]/g, "") // remove non-alphanumeric except spaces
+    .replace(/\s+/g, "-");       // replace spaces with dash
 }
 
 // Picks the first option for each attribute (default selection for Quick Shop).
