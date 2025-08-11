@@ -143,14 +143,6 @@ const ProductPrice = styled.p`
   margin: 0;
 `;
 
-function toKebab(s) {
-  return String(s)
-    .trim()
-    .toLowerCase()
-     .replace(/[^a-z0-9\s-]/g, "") 
-    .replace(/\s+/g, "-");        
-}
-
 function getDefaultSelections(attributes = []) {
   const selected = {};
   attributes.forEach((set) => {
@@ -167,7 +159,6 @@ const CategoryPage = () => {
   const { addToCart } = useCart();
   const { data, loading, error } = useQuery(GET_PRODUCTS);
 
-  // fallback: ако нема :categoryName, земи го првиот сегмент од URL
   const urlSlug = (location.pathname.split("/")[1] || "").toLowerCase();
   const cat = (categoryName || urlSlug || "all").toLowerCase();
   const capitalizedCategory = cat.charAt(0).toUpperCase() + cat.slice(1);
@@ -184,16 +175,14 @@ const CategoryPage = () => {
       <CategoryTitle>{capitalizedCategory}</CategoryTitle>
       <Grid>
         {products.map((product) => {
-          const kebabName = toKebab(product.name);
           const price = product.prices?.[0]?.amount ?? 0;
           const inStock = product.inStock !== false;
-
           const defaults = getDefaultSelections(product.attributes || []);
 
           return (
             <CardWrapper
               key={product.id}
-              data-testid={`product-${kebabName}`}
+              data-testid={`product-${product.id.toLowerCase()}`} // ✅ fixed
             >
               {inStock && (
                 <AddToCartButton
