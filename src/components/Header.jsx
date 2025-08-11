@@ -92,23 +92,25 @@ const Header = () => {
   return (
     <HeaderWrapper>
       <Left>
-        {categories.map((category) => {
-          const path = `/${category.toLowerCase()}`;
-          return (
-            <NavItem
-              to={path}
-              key={category}
-              className={({ isActive }) => (isActive ? "active" : "")}
-              data-testid={({ isActive }) =>
-                isActive ? "active-category-link" : "category-link"
-              }
-              end
-            >
-              {category.toUpperCase()}
-            </NavItem>
-          );
-        })}
-      </Left>
+  {categories.map((category) => {
+    const path = `/${category.toLowerCase()}`;
+    return (
+      <NavItem
+        to={path}
+        key={category}
+        className={({ isActive }) => (isActive ? "active" : "")}
+        end
+      >
+        {({ isActive }) => (
+          <span data-testid={isActive ? "active-category-link" : "category-link"}>
+            {category.toUpperCase()}
+          </span>
+        )}
+      </NavItem>
+    );
+  })}
+</Left>
+
 
       <Center>
         <LogoImage src={Logo} alt="Logo" />
