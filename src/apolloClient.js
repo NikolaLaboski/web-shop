@@ -1,10 +1,4 @@
-// src/apolloClient.js 
-import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { ApolloClient, InMemoryCache } from '@apollo/client';
 
-const client = new ApolloClient({
-  uri: 'https://scandi-shop-backend-production.up.railway.app/graphql', // без '/'
-  cache: new InMemoryCache(),
-});
-
-
-export default client;
+const uri = import.meta.env.VITE_API_URL ?? '/graphql'; // default: proxy преку Netlify
+export default new ApolloClient({ uri, cache: new InMemoryCache() });
