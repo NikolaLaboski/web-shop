@@ -1,7 +1,13 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+// src/apolloClient.js 
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+
+const uri =
+  import.meta.env.VITE_API_URL ||                  
+  'http://localhost/backend/graphql/index.php';    
+
 
 const client = new ApolloClient({
-  uri: 'http://localhost/backend/graphql/index.php',
+  link: new HttpLink({ uri }),
   cache: new InMemoryCache(),
 });
 
