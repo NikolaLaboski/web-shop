@@ -3,3 +3,9 @@
   to = "https://scandi-shop-backend-production.up.railway.app/graphql"
   status = 200
   force = true
+
+# SPA fallback 
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
