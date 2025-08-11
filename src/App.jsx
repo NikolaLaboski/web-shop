@@ -50,25 +50,24 @@ const App = () => {
       <Header />
       <CartOverlay visible={showCart} onClose={() => setShowCart(false)} />
 
-      <Routes>
+      
+<Routes>
+  <Route path="/" element={<Navigate to="/all" />} />
 
-          {/* Default redirects */}
-          <Route path="/" element={<Navigate to="/all" />} />
-          <Route path="/category" element={<Navigate to="/category/all" />} />
+  {/* експлицитни рути за тестовите */}
+  <Route path="/all" element={<CategoryPage />} />
+  <Route path="/tech" element={<CategoryPage />} />
+  <Route path="/clothes" element={<CategoryPage />} />
 
-          {/* Category routes (support both styles) */}
-          <Route path="/:categoryName" element={<CategoryPage />} />
-          <Route path="/category/:categoryName" element={<CategoryPage />} />
+  {/* задржи ја и старата шема ако ја користиш на друго место */}
+  <Route path="/category/:categoryName" element={<CategoryPage />} />
 
-          {/* Product + checkout */}
-          <Route path="/product/:id" element={<ProductPage />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
+  <Route path="/product/:id" element={<ProductPage />} />
+  <Route path="/checkout" element={<CheckoutPage />} />
+</Routes>
 
-          {process.env.NODE_ENV !== "production" && (
-            <Route path="/test" element={<TestOrderPage />} />
-          )}
 
-      </Routes>
+   
     </div>
   );
 };

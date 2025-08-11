@@ -1,15 +1,10 @@
-// CategoryPage.jsx
-// Lists products by category (or all) and allows quick "add to cart" from the grid.
-// Data - GraphQL GET_PRODUCTS query (id, name, category, gallery, prices, attributes, inStock).
-
 import React from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import styled from "styled-components";
 import { FaShoppingCart } from "react-icons/fa";
 import { useCart } from "../context/CartContext";
 import { useQuery, gql } from "@apollo/client";
 
-// GraphQL query: minimal fields for PLP + inStock for out-of-stock behavior.
 const GET_PRODUCTS = gql`
   query {
     products {
@@ -28,7 +23,6 @@ const GET_PRODUCTS = gql`
   }
 `;
 
-// Responsive grid for product cards.
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -57,7 +51,6 @@ const CategoryTitle = styled.h2`
   }
 `;
 
-// Product card with hoverable add-to-cart button.
 const CardWrapper = styled.div`
   position: relative;
   width: 100%;
@@ -154,11 +147,10 @@ function toKebab(s) {
   return String(s)
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, "") // remove non-alphanumeric except spaces
-    .replace(/\s+/g, "-");       // replace spaces with dash
+    .replace(/[^a-z0-9\s]/g, "")
+    .replace(/\s+/g, "-");
 }
 
-// Picks the first option for each attribute (default selection for Quick Shop).
 function getDefaultSelections(attributes = []) {
   const selected = {};
   attributes.forEach((set) => {
@@ -171,16 +163,18 @@ function getDefaultSelections(attributes = []) {
 
 const CategoryPage = () => {
   const { categoryName } = useParams();
+  const location = useLocation();
   const { addToCart } = useCart();
   const { data, loading, error } = useQuery(GET_PRODUCTS);
 
-  const cat = (categoryName || "all").toLowerCase();
+  // fallback: ако нема :categoryName, земи го првиот сегмент од URL
+  const urlSlug = (location.pathname.split("/")[1] || "").toLowerCase();
+  const cat = (categoryName || urlSlug || "all").toLowerCase();
   const capitalizedCategory = cat.charAt(0).toUpperCase() + cat.slice(1);
 
   if (loading) return <p style={{ padding: "48px" }}>Loading...</p>;
   if (error) return <p style={{ padding: "48px" }}>Error: {error.message}</p>;
 
-  // If "all" show everything; otherwise filter by category (case-insensitive).
   const products = cat === "all"
     ? data.products
     : data.products.filter(p => (p.category || "").toLowerCase() === cat);
@@ -199,7 +193,7 @@ const CategoryPage = () => {
           return (
             <CardWrapper
               key={product.id}
-              data-testid={`product-${kebabName}`} // ✅ fix for tests
+              data-testid={`product-${kebabName}`}
             >
               {inStock && (
                 <AddToCartButton
