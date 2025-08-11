@@ -108,17 +108,20 @@ const Header = () => {
     <HeaderWrapper>
       <Left>
         {categories.map((category) => {
-          // Compute active state using pathname equality to preserve NavLink styling.
-          const path = `/category/${category.toLowerCase()}`;
-          const isActive = location.pathname === path;
+          const path = `/${category.toLowerCase()}`;
           return (
             <NavItem
               to={path}
               key={category}
-              className={isActive ? "active" : ""}
-              data-testid={isActive ? "active-category-link" : "category-link"}
+              className={({ isActive }) => (isActive ? "active" : "")}
+              data-testid="category-link"
+              end
             >
-              {category}
+              {({ isActive }) => (
+                <span {...(isActive ? { "data-testid": "active-category-link" } : {})}>
+                  {category.toUpperCase()}
+                </span>
+              )}
             </NavItem>
           );
         })}

@@ -134,21 +134,17 @@ const Description = styled.div`
   color: #555; font-size: 14px; line-height: 1.6;
 `;
 
-/** 
+/**
  * normalizeGallery
  * Ensures the gallery is an array of URLs.
- * Accepts array, JSON-stringified array, or comma/space-separated string of URLs.
- * Returns [] if nothing valid is provided.
  */
 function normalizeGallery(g) {
   if (Array.isArray(g)) return g;
   if (typeof g === "string") {
-    // Try JSON array in string
     try {
       const parsed = JSON.parse(g);
       if (Array.isArray(parsed)) return parsed;
     } catch {}
-    // Split by commas/whitespace and keep valid URLs
     const parts = g
       .split(/[\s,]+/)
       .map(s => s.trim())
@@ -158,9 +154,75 @@ function normalizeGallery(g) {
   return [];
 }
 
+/**
+ * parseDescriptionSafe
+ * Minimal allowlist HTML parser to avoid dangerouslySetInnerHTML.
+ * Supports: <p>, <br>, <strong>/<b>, <em>/<i>, <ul>/<ol>/<li>.
+ */
+function parseDescriptionSafe(html = "") {
+  if (!html || typeof html !== "string") return null;
+
+  // Replace <br> with newline markers to split paragraphs consistently.
+  const normalized = html.replace(/<br\s*\/?>/gi, "\n");
+
+  // Split by simple block tags while keeping text content.
+  // This is a very small parser; enough for the common descriptions in the task data.
+  const temp = document.createElement("div");
+  temp.innerHTML = normalized;
+
+  const nodes = [];
+  temp.childNodes.forEach((node, idx) => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      const text = node.textContent.trim();
+      if (text) nodes.push(<p key={`t-${idx}`}>{text}</p>);
+      return;
+    }
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const tag = node.tagName.toLowerCase();
+      if (tag === "p") {
+        nodes.push(<p key={`p-${idx}`}>{inlineChildren(node)}</p>);
+      } else if (tag === "ul") {
+        nodes.push(
+          <ul key={`ul-${idx}`}>{Array.from(node.children).map((li, i) => <li key={i}>{inlineChildren(li)}</li>)}</ul>
+        );
+      } else if (tag === "ol") {
+        nodes.push(
+          <ol key={`ol-${idx}`}>{Array.from(node.children).map((li, i) => <li key={i}>{inlineChildren(li)}</li>)}</ol>
+        );
+      } else {
+        // Fallback: wrap unknown element's text in a paragraph
+        nodes.push(<p key={`f-${idx}`}>{node.textContent}</p>);
+      }
+    }
+  });
+
+  return <>{nodes}</>;
+}
+
+function inlineChildren(el) {
+  const parts = [];
+  el.childNodes.forEach((n, i) => {
+    if (n.nodeType === Node.TEXT_NODE) {
+      parts.push(n.textContent);
+    } else if (n.nodeType === Node.ELEMENT_NODE) {
+      const t = n.tagName.toLowerCase();
+      if (t === "strong" || t === "b") {
+        parts.push(<strong key={i}>{inlineChildren(n)}</strong>);
+      } else if (t === "em" || t === "i") {
+        parts.push(<em key={i}>{inlineChildren(n)}</em>);
+      } else if (t === "br") {
+        parts.push(<br key={i} />);
+      } else {
+        parts.push(n.textContent);
+      }
+    }
+  });
+  return parts;
+}
+
 const ProductPage = () => {
   const { id } = useParams();
-  const { addToCart } = useCart();
+  const { addToCart, setShowCart } = useCart();
 
   // Query product from backend with network-only fetch first time, then cache.
   const { data, loading, error } = useQuery(GET_PRODUCT, {
@@ -179,17 +241,14 @@ const ProductPage = () => {
   if (!product) return <div>Product not found.</div>;
 
   const gallery = normalizeGallery(product.gallery);
-  console.log("GALLERY FROM BACKEND:", product.gallery, "→ normalized:", gallery);
-
   const price = product.prices?.[0]?.amount ?? 0;
 
-  // Separate attribute sets by type/name for rendering.
   const attrs = product.attributes || [];
   const sizeSet = attrs.find(a => a.name?.toLowerCase() === "size");
   const capacitySet = attrs.find(a => a.name?.toLowerCase() === "capacity");
   const colorSet = attrs.find(a => a.name?.toLowerCase() === "color");
 
-  // Category-based required attribute logic: tech requires capacity/color; others require size.
+  // Category-based required attribute logic (example policy).
   const isTech = product.category?.toLowerCase() === "tech";
   const requiredKeys = [];
   if (isTech) {
@@ -198,21 +257,19 @@ const ProductPage = () => {
   } else {
     if (sizeSet) requiredKeys.push("Size");
   }
-
-  // Only allow add-to-cart if all required attributes have been chosen.
   const canAdd =
     requiredKeys.length === 0 ||
     requiredKeys.every((k) => !!selectedAttributes[k]);
 
-  // Add product to cart with first gallery image and selected attributes.
   const handleAddToCart = () => {
     addToCart(
       { ...product, image: gallery[0], prices: product.prices },
       selectedAttributes
     );
+    // Open cart overlay after adding (if context exposes setShowCart)
+    if (typeof setShowCart === "function") setShowCart(true);
   };
 
-  // Gallery navigation handlers.
   const handlePrev = () =>
     setImageIndex((prev) => (prev === 0 ? gallery.length - 1 : prev - 1));
   const handleNext = () =>
@@ -221,35 +278,37 @@ const ProductPage = () => {
   return (
     <Container>
       <Layout>
-        {/* Left side: thumbnails + main image */}
-        <LeftColumn>
-          <Gallery>
-            {gallery.map((img, index) => (
-              <Thumb
-                key={index}
-                src={img}
-                alt={`preview-${index}`}
-                onClick={() => setImageIndex(index)}
-              />
-            ))}
-          </Gallery>
+        {/* Gallery (thumbs + main image) */}
+        <div data-testid="product-gallery">
+          <LeftColumn>
+            <Gallery>
+              {gallery.map((img, index) => (
+                <Thumb
+                  key={index}
+                  src={img}
+                  alt={`preview-${index}`}
+                  onClick={() => setImageIndex(index)}
+                />
+              ))}
+            </Gallery>
 
-          <MainImageWrapper>
-            <MainImage src={gallery[imageIndex] || ""} alt={product.name} />
-            {gallery.length > 1 && (
-              <>
-                <LeftArrow onClick={handlePrev}>‹</LeftArrow>
-                <RightArrow onClick={handleNext}>›</RightArrow>
-              </>
-            )}
-          </MainImageWrapper>
-        </LeftColumn>
+            <MainImageWrapper>
+              <MainImage src={gallery[imageIndex] || ""} alt={product.name} />
+              {gallery.length > 1 && (
+                <>
+                  <LeftArrow onClick={handlePrev} aria-label="Prev image">‹</LeftArrow>
+                  <RightArrow onClick={handleNext} aria-label="Next image">›</RightArrow>
+                </>
+              )}
+            </MainImageWrapper>
+          </LeftColumn>
+        </div>
 
-        {/* Right side: product info, attributes, and add-to-cart */}
+        {/* Info (attributes, price, add-to-cart, description) */}
         <Info>
           <Title>{product.name}</Title>
 
-          {/* Size selector for non-tech products */}
+          {/* Size for non-tech products */}
           {!isTech && sizeSet && (
             <div data-testid="product-attribute-size">
               <Label>SIZE:</Label>
@@ -279,9 +338,9 @@ const ProductPage = () => {
             </div>
           )}
 
-          {/* Capacity selector for tech products */}
+          {/* Capacity for tech products */}
           {isTech && capacitySet && (
-            <div data-testid="product-attribute-size">
+            <div data-testid="product-attribute-capacity">
               <Label>CAPACITY:</Label>
               <Options>
                 {capacitySet.items.map((it) => {
@@ -294,8 +353,8 @@ const ProductPage = () => {
                       selected={isSelected}
                       data-testid={
                         isSelected
-                          ? `product-attribute-size-${kebab}-selected`
-                          : `product-attribute-size-${kebab}`
+                          ? `product-attribute-capacity-${kebab}-selected`
+                          : `product-attribute-capacity-${kebab}`
                       }
                       onClick={() =>
                         setSelectedAttributes((prev) => ({ ...prev, Capacity: val }))
@@ -309,7 +368,7 @@ const ProductPage = () => {
             </div>
           )}
 
-          {/* Color selector for tech products */}
+          {/* Color for tech products */}
           {isTech && colorSet && (
             <div data-testid="product-attribute-color">
               <Label>COLOR:</Label>
@@ -318,7 +377,7 @@ const ProductPage = () => {
                   const val = it.value;
                   const isSelected = selectedAttributes.Color === val;
                   const kebab = String(val).replace("#", "").toLowerCase();
-                  return ( 
+                  return (
                     <ColorBox
                       key={it.id || val}
                       color={val}
@@ -331,6 +390,7 @@ const ProductPage = () => {
                       onClick={() =>
                         setSelectedAttributes((prev) => ({ ...prev, Color: val }))
                       }
+                      aria-label={`Color ${val}`}
                     />
                   );
                 })}
@@ -339,17 +399,16 @@ const ProductPage = () => {
           )}
 
           <Label>PRICE:</Label>
-          <Price>${price.toFixed(2)}</Price>
+          <Price data-testid="product-price">${price.toFixed(2)}</Price>
 
           <Button data-testid="add-to-cart" onClick={handleAddToCart} disabled={!canAdd}>
             ADD TO CART
           </Button>
 
-          {/* Render HTML description from backend; ensure source is trusted */}
-          <Description
-            data-testid="product-description"
-            dangerouslySetInnerHTML={{ __html: product.description || "" }}
-          />
+          {/* Description rendered via a small safe parser  */}
+          <Description data-testid="product-description">
+            {parseDescriptionSafe(product.description || "")}
+          </Description>
         </Info>
       </Layout>
     </Container>

@@ -7,7 +7,7 @@ import CheckoutPage from "./pages/CheckoutPage";
 import CartOverlay from "./components/CartOverlay";
 
 import { gql, useMutation } from "@apollo/client";
-import { useCart } from "./context/CartContext"; 
+import { useCart } from "./context/CartContext";
 
 const CREATE_ORDER = gql`
   mutation CreateOrder($customer_name: String!, $products: [OrderItemInput!]!, $total_price: Float!) {
@@ -15,11 +15,6 @@ const CREATE_ORDER = gql`
   }
 `;
 
-/**
- * TestOrderPage
- * NOTE: Mounted page triggers a createOrder mutation.
- * We will conditionally register this route only in non-production builds.
- */
 const TestOrderPage = () => {
   const [createOrder] = useMutation(CREATE_ORDER);
 
@@ -34,8 +29,9 @@ const TestOrderPage = () => {
         total_price: 59.97
       }
     })
-    .then(res => console.log(" ORDER SUCCESS:", res.data.createOrder))
-    .catch(err => console.error(" ORDER ERROR:", err));
+      .then(res => console.log("ORDER SUCCESS:", res.data.createOrder))
+      .catch(err => console.error("ORDER ERROR:", err));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -52,20 +48,23 @@ const App = () => {
   return (
     <div>
       <Header />
-      {/* Overlay */}
-      {showCart && <CartOverlay onClose={() => setShowCart(false)} />}
+      <CartOverlay visible={showCart} onClose={() => setShowCart(false)} />
 
       <Routes>
-        {/* Default redirects */}
-        <Route path="/" element={<Navigate to="/category/all" />} />
-        <Route path="/category" element={<Navigate to="/category/all" />} />
+        {/* Redirect root to all */}
+        <Route path="/" element={<Navigate to="/all" />} />
+        <Route path="/category" element={<Navigate to="/all" />} />
 
-        {/* Main routes */}
+        {/* New alias route for /all, /tech, /clothes */}
+        <Route path="/:categoryName" element={<CategoryPage />} />
+
+        {/* Keep old route for backward compatibility */}
         <Route path="/category/:categoryName" element={<CategoryPage />} />
+
+        {/* Other routes */}
         <Route path="/product/:id" element={<ProductPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
 
-        {/* Dev-only route: exclude from production bundles */}
         {process.env.NODE_ENV !== "production" && (
           <Route path="/test" element={<TestOrderPage />} />
         )}
