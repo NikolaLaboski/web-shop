@@ -170,13 +170,13 @@ const ProductPage = () => {
       <Layout>
         {/* Gallery */}
         <div data-testid="product-gallery">
-          {/* ... gallery thumbs and main image како во твојот код ... */}
+          {/* */}
         </div>
 
         {/* Info */}
         <div>
           <h2>{product.name}</h2>
-          {/* ... останати атрибути, цена, копче, опис ... */}
+          
         </div>
       </Layout>
     </Container>
