@@ -51,23 +51,23 @@ const App = () => {
       <CartOverlay visible={showCart} onClose={() => setShowCart(false)} />
 
       <Routes>
-        {/* Redirect root to all */}
-        <Route path="/" element={<Navigate to="/all" />} />
-        <Route path="/category" element={<Navigate to="/all" />} />
 
-        {/* New alias route for /all, /tech, /clothes */}
-        <Route path="/:categoryName" element={<CategoryPage />} />
+          {/* Default redirects */}
+          <Route path="/" element={<Navigate to="/all" />} />
+          <Route path="/category" element={<Navigate to="/category/all" />} />
 
-        {/* Keep old route for backward compatibility */}
-        <Route path="/category/:categoryName" element={<CategoryPage />} />
+          {/* Category routes (support both styles) */}
+          <Route path="/:categoryName" element={<CategoryPage />} />
+          <Route path="/category/:categoryName" element={<CategoryPage />} />
 
-        {/* Other routes */}
-        <Route path="/product/:id" element={<ProductPage />} />
-        <Route path="/checkout" element={<CheckoutPage />} />
+          {/* Product + checkout */}
+          <Route path="/product/:id" element={<ProductPage />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
 
-        {process.env.NODE_ENV !== "production" && (
-          <Route path="/test" element={<TestOrderPage />} />
-        )}
+          {process.env.NODE_ENV !== "production" && (
+            <Route path="/test" element={<TestOrderPage />} />
+          )}
+
       </Routes>
     </div>
   );
