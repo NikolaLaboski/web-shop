@@ -1,7 +1,4 @@
 // Header.jsx
-// Top navigation bar: category links (client-side), centered logo, and cart button.
-// Styling via styled-components. Uses CartContext to toggle CartOverlay.
-
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import styled from "styled-components";
@@ -9,7 +6,6 @@ import { useCart } from "../context/CartContext";
 import CartIcon from "../assets/cart.svg";
 import Logo from "../assets/logo.svg";
 
-// Layout containers for header sections (left nav, center logo, right actions).
 const HeaderWrapper = styled.header`
   display: flex;
   align-items: center;
@@ -40,7 +36,6 @@ const Right = styled.div`
   position: relative;
 `;
 
-// Category link with active state underline/brand color.
 const NavItem = styled(NavLink)`
   font-size: 1rem;
   text-decoration: none;
@@ -61,7 +56,6 @@ const NavItem = styled(NavLink)`
 
 const LogoImage = styled.img` height: 32px; `;
 
-// Cart button (icon + optional badge).
 const CartButton = styled.button`
   background: white;
   border: none;
@@ -89,20 +83,11 @@ const CartCount = styled.span`
   justify-content: center;
 `;
 
-/**
- * Header
- * Renders category navigation, centered brand logo, and cart toggle button.
- * Behavior:
- *  - Highlights active category link based on current pathname.
- *  - Toggles cart overlay via CartContext.setShowCart.
- * Accessibility:
- *  - Button uses an <img> with alt text; consider adding aria-expanded in future.
- */
 const Header = () => {
   const location = useLocation();
-  const categories = ["all", "tech", "clothes"]; // source of truth for nav tabs
+  const categories = ["all", "tech", "clothes"];
   const { cartItems, setShowCart } = useCart();
-  const cartCount = cartItems.length; // badge shows number of distinct items
+  const cartCount = cartItems.length;
 
   return (
     <HeaderWrapper>
@@ -114,21 +99,18 @@ const Header = () => {
               to={path}
               key={category}
               className={({ isActive }) => (isActive ? "active" : "")}
-              data-testid="category-link"
+              data-testid={({ isActive }) =>
+                isActive ? "active-category-link" : "category-link"
+              }
               end
             >
-              {({ isActive }) => (
-                <span {...(isActive ? { "data-testid": "active-category-link" } : {})}>
-                  {category.toUpperCase()}
-                </span>
-              )}
+              {category.toUpperCase()}
             </NavItem>
           );
         })}
       </Left>
 
       <Center>
-        {/* Brand/logo in the middle */}
         <LogoImage src={Logo} alt="Logo" />
       </Center>
 
@@ -136,15 +118,12 @@ const Header = () => {
         <CartButton
           data-testid="cart-btn"
           onClick={(e) => {
-            // Prevent any parent navigation if placed inside a link.
             e.preventDefault();
             e.stopPropagation();
-            // Toggle overlay visibility.
             setShowCart((prev) => !prev);
           }}
         >
           <img src={CartIcon} alt="Cart Icon" width={20} height={20} />
-          {/* Show quantity badge only when there are items */}
           {cartCount > 0 && <CartCount>{cartCount}</CartCount>}
         </CartButton>
       </Right>
