@@ -1,8 +1,24 @@
+
 [[redirects]]
   from = "/graphql"
   to = "https://scandi-shop-backend-production.up.railway.app/graphql"
   status = 200
   force = true
+
+
+[[redirects]]
+  from = "/graphql/"
+  to = "https://scandi-shop-backend-production.up.railway.app/graphql"
+  status = 200
+  force = true
+
+
+[[redirects]]
+  from = "/graphql/*"
+  to = "https://scandi-shop-backend-production.up.railway.app/graphql"
+  status = 200
+  force = true
+
 
 [[redirects]]
   from = "/*"
