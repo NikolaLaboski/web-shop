@@ -151,7 +151,10 @@ const ProductPrice = styled.p`
 `;
 
 function toKebab(s) {
-  return String(s).toLowerCase().replace(/\s+/g, "-");
+  return String(s)
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, ""); // clean special chars like in iPhone
 }
 
 // Picks the first option for each attribute (default selection for Quick Shop).
@@ -188,13 +191,15 @@ const CategoryPage = () => {
         {products.map((product) => {
           const kebabName = toKebab(product.name);
           const price = product.prices?.[0]?.amount ?? 0;
-          const inStock = product.inStock !== false; // default to true if undefined
+          const inStock = product.inStock !== false;
 
           const defaults = getDefaultSelections(product.attributes || []);
 
           return (
-            <CardWrapper key={product.id} data-testid={`product-${kebabName}`}>
-              {/* Quick add-to-cart (only visible on hover, and only when in stock) */}
+            <CardWrapper
+              key={product.id}
+              data-testid={`product-${kebabName}`} // ✅ fix for tests
+            >
               {inStock && (
                 <AddToCartButton
                   onClick={() =>
@@ -211,7 +216,6 @@ const CategoryPage = () => {
                 </AddToCartButton>
               )}
 
-              {/* PDP navigation is always available (even when out of stock) */}
               <Link to={`/product/${product.id}`}>
                 <ProductImageWrap>
                   <ProductImage
