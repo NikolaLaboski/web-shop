@@ -147,8 +147,8 @@ function toKebab(s) {
   return String(s)
     .trim()
     .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, "")
-    .replace(/\s+/g, "-");
+     .replace(/[^a-z0-9\s-]/g, "") 
+    .replace(/\s+/g, "-");        
 }
 
 function getDefaultSelections(attributes = []) {
