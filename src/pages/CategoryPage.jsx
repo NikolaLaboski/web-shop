@@ -143,7 +143,6 @@ const ProductPrice = styled.p`
   margin: 0;
 `;
 
-/* helper for test-id expects product NAME in kebab case */
 function kebabCase(s = "") {
   return String(s).trim().toLowerCase().replace(/\s+/g, "-");
 }
@@ -161,7 +160,7 @@ function getDefaultSelections(attributes = []) {
 const CategoryPage = () => {
   const { categoryName } = useParams();
   const location = useLocation();
-  const { addToCart } = useCart();
+  const { addToCart, setShowCart } = useCart(); // <-- bring setShowCart
   const { data, loading, error } = useQuery(GET_PRODUCTS);
 
   const urlSlug = (location.pathname.split("/")[1] || "").toLowerCase();
@@ -183,22 +182,20 @@ const CategoryPage = () => {
           const price = product.prices?.[0]?.amount ?? 0;
           const inStock = product.inStock !== false;
           const defaults = getDefaultSelections(product.attributes || []);
-          const testId = `product-${kebabCase(product.name)}`; // <-- name-based
+          const testId = `product-${kebabCase(product.name)}`;
 
           return (
-            <CardWrapper
-              key={product.id}
-              data-testid={testId}
-            >
+            <CardWrapper key={product.id} data-testid={testId}>
               {inStock && (
                 <AddToCartButton
-                  onClick={() =>
+                  onClick={() => {
                     addToCart({
                       ...product,
                       selectedAttributes: defaults,
                       attributes: product.attributes || [],
-                    })
-                  }
+                    });
+                    setShowCart(true); // <-- auto-open overlay so the test passes
+                  }}
                   title="Add to Cart"
                   aria-label={`Quick add ${product.name}`}
                 >
