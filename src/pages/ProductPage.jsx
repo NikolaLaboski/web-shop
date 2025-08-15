@@ -24,10 +24,9 @@ const GET_PRODUCT = gql`
   }
 `;
 
-
 const THUMB_W = 84;
 const GAP = 16;
-/* ---------- Styled (Figma-like) ---------- */
+/* ---------- Styled ---------- */
 
 const Container = styled.div`
   padding: 40px 24px;
@@ -64,8 +63,6 @@ const MainImage = styled.img`
   display: block;
 `;
 
-
-
 const Thumbs = styled.div`
   display: flex;
   gap: 12px;
@@ -86,7 +83,6 @@ const Thumbs = styled.div`
     z-index: 2; /* below Arrow (3) */
   }
 `;
-
 
 const Thumb = styled.button`
   width: 70px;
@@ -111,7 +107,6 @@ const Thumb = styled.button`
   }
 `;
 
-// ↓ replace your Arrow styled with this
 const Arrow = styled.button`
   position: absolute;
   top: 12px;
@@ -125,12 +120,10 @@ const Arrow = styled.button`
   cursor: pointer;
   z-index: 3; /* always above thumbs/main image */
 
-  /* On desktop, move the LEFT arrow to the right of the thumbnail rail */
   @media (min-width: 900px) {
     ${p => !p.$right && `left: calc(${THUMB_W + GAP}px + 12px);`}
   }
 `;
-
 
 const Info = styled.div``;
 
@@ -251,6 +244,10 @@ function parseDescriptionSafe(html = "") {
   });
   return <>{nodes}</>;
 }
+function testIdValue(x) {
+  // Keep exact text (tests match exact "512G", "Green", or "#44FF03")
+  return String(x ?? "").trim();
+}
 /* ---------- End Helpers ---------- */
 
 export default function ProductPage() {
@@ -337,12 +334,8 @@ export default function ProductPage() {
               <MainImage src={gallery[imageIndex]} alt={product.name} />
               {gallery.length > 1 && (
                 <>
-                  <Arrow onClick={handlePrev} aria-label="Prev">
-                    ‹
-                  </Arrow>
-                  <Arrow onClick={handleNext} $right aria-label="Next">
-                    ›
-                  </Arrow>
+                  <Arrow onClick={handlePrev} aria-label="Prev">‹</Arrow>
+                  <Arrow onClick={handleNext} $right aria-label="Next">›</Arrow>
                 </>
               )}
               <Thumbs>
@@ -370,6 +363,7 @@ export default function ProductPage() {
                 {sizeSet.items.map((it) => (
                   <Opt
                     key={it.id}
+                    data-testid={`product-attribute-size-${testIdValue(it.displayValue || it.value)}`}
                     onClick={() => setAttr(sizeSet.name, it)}
                     $active={selectedAttributes[sizeSet.name]?.id === it.id}
                   >
@@ -387,6 +381,7 @@ export default function ProductPage() {
                 {capacitySet.items.map((it) => (
                   <Opt
                     key={it.id}
+                    data-testid={`product-attribute-capacity-${testIdValue(it.displayValue || it.value)}`}
                     onClick={() => setAttr(capacitySet.name, it)}
                     $active={selectedAttributes[capacitySet.name]?.id === it.id}
                   >
@@ -401,15 +396,21 @@ export default function ProductPage() {
             <Group data-testid={`product-attribute-${kebabCase(colorSet.name)}`}>
               <GroupLabel>{colorSet.name}</GroupLabel>
               <Options>
-                {colorSet.items.map((it) => (
-                  <Swatch
-                    key={it.id}
-                    onClick={() => setAttr(colorSet.name, it)}
-                    $active={selectedAttributes[colorSet.name]?.id === it.id}
-                    $color={it.value}
-                    title={it.displayValue || it.value}
-                  />
-                ))}
+                {colorSet.items.map((it) => {
+                  const colorId = it.value?.startsWith("#")
+                    ? it.value
+                    : (it.displayValue || it.value);
+                  return (
+                    <Swatch
+                      key={it.id}
+                      data-testid={`product-attribute-color-${testIdValue(colorId)}`}
+                      onClick={() => setAttr(colorSet.name, it)}
+                      $active={selectedAttributes[colorSet.name]?.id === it.id}
+                      $color={it.value}
+                      title={it.displayValue || it.value}
+                    />
+                  );
+                })}
               </Options>
             </Group>
           )}

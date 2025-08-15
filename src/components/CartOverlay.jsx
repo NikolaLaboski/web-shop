@@ -1,4 +1,5 @@
-// Mini-cart overlay with a persistent container so Auto-QA can assert hidden/visible.
+// src/components/CartOverlay.jsx
+// Mini-cart overlay kept always mounted; visibility toggled so tests can assert hidden/visible.
 
 import React from "react";
 import styled from "styled-components";
@@ -157,7 +158,7 @@ const OrderButton = styled.button`
   &:disabled { background-color: #ccc; cursor: not-allowed; }
 `;
 
-/** Normalizes attribute sets to a { Size, Capacity, Color } map */
+/** Normalize attribute sets for overlay badges (read-only / clickable as you prefer) */
 function getAttrSetMap(item) {
   if (item && item.attributes && !Array.isArray(item.attributes)) {
     return {
@@ -178,7 +179,8 @@ function getAttrSetMap(item) {
   return map;
 }
 
-export default function CartOverlay() {
+export default function CartOverlay(props) {
+  // Accept props (visible/onClose) but fallback to Context so both styles work.
   const {
     cartItems,
     incrementQuantity,
@@ -192,13 +194,19 @@ export default function CartOverlay() {
 
   const navigate = useNavigate();
 
+  const isOpen =
+    typeof props.visible === "boolean" ? props.visible : !!showCart;
+
+  const close = () => {
+    if (typeof props.onClose === "function") props.onClose();
+    else setShowCart(false);
+  };
+
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const total = cartItems.reduce(
     (acc, item) => acc + ((item?.prices?.[0]?.amount ?? 0) * item.quantity),
     0
   );
-
-  const close = () => setShowCart(false);
 
   const handlePlaceOrder = async () => {
     try {
@@ -216,150 +224,143 @@ export default function CartOverlay() {
   return (
     <Container
       data-testid="cart-overlay"
-      style={{ display: showCart ? "block" : "none" }}
+      aria-hidden={!isOpen}
+      style={{ visibility: isOpen ? "visible" : "hidden" }}
     >
-      {showCart && (
-        <>
-          <Backdrop onClick={close} />
-          <OverlayPanel>
-            <CloseBtn onClick={close}>×</CloseBtn>
+      {/* keep children mounted, but hide/show them for precise sizing */}
+      <Backdrop onClick={close} style={{ display: isOpen ? "block" : "none" }} />
+      <OverlayPanel style={{ display: isOpen ? "block" : "none" }}>
+        <CloseBtn onClick={close}>×</CloseBtn>
 
-            <Header>
-              My Bag, {totalItems} {totalItems === 1 ? "Item" : "Items"}
-            </Header>
+        <Header>
+          My Bag, {totalItems} {totalItems === 1 ? "Item" : "Items"}
+        </Header>
 
-            {cartItems.length === 0 ? (
-              <p>No items in cart.</p>
-            ) : (
-              <>
-                {cartItems.map((item, index) => {
-                  const { Size, Capacity, Color } = getAttrSetMap(item);
-                  const selected = item.selectedAttributes || {};
-                  const price = item?.prices?.[0]?.amount ?? 0;
-                  const key = `${item.id}-${index}`;
+        {cartItems.length === 0 ? (
+          <p>No items in cart.</p>
+        ) : (
+          <>
+            {cartItems.map((item, index) => {
+              const { Size, Capacity, Color } = getAttrSetMap(item);
+              const selected = item.selectedAttributes || {};
+              const price = item?.prices?.[0]?.amount ?? 0;
+              const key = `${item.id}-${index}`;
 
-                  return (
-                    <Product key={key}>
-                      <Left>
-                        <Name>{item.name}</Name>
-                        <Price>${price.toFixed(2)}</Price>
+              return (
+                <Product key={key}>
+                  <Left>
+                    <Name>{item.name}</Name>
+                    <Price>${price.toFixed(2)}</Price>
 
-                        {Size.length > 0 && (
-                          <>
-                            <AttributeTitle>Size:</AttributeTitle>
-                            <OptionsRow data-testid="cart-item-attribute-size">
-                              {Size.map((size) => {
-                                const isSel = selected.Size === size;
-                                const kebab = String(size).toLowerCase();
-                                return (
-                                  <SizeBox
-                                    key={size}
-                                    selected={isSel}
-                                    data-testid={
-                                      isSel
-                                        ? `cart-item-attribute-size-${kebab}-selected`
-                                        : `cart-item-attribute-size-${kebab}`
-                                    }
-                                    onClick={() => updateAttribute?.(item.id, "Size", size)}
-                                  >
-                                    {size}
-                                  </SizeBox>
-                                );
-                              })}
-                            </OptionsRow>
-                          </>
-                        )}
+                    {Size.length > 0 && (
+                      <>
+                        <AttributeTitle>Size:</AttributeTitle>
+                        <OptionsRow data-testid="cart-item-attribute-size">
+                          {Size.map((size) => {
+                            const isSel = selected.Size === size;
+                            const kebab = String(size).toLowerCase();
+                            return (
+                              <SizeBox
+                                key={size}
+                                selected={isSel}
+                                data-testid={
+                                  isSel
+                                    ? `cart-item-attribute-size-${kebab}-selected`
+                                    : `cart-item-attribute-size-${kebab}`
+                                }
+                                onClick={() => updateAttribute?.(item.id, "Size", size)}
+                              >
+                                {size}
+                              </SizeBox>
+                            );
+                          })}
+                        </OptionsRow>
+                      </>
+                    )}
 
-                        {Capacity.length > 0 && (
-                          <>
-                            <AttributeTitle>Capacity:</AttributeTitle>
-                            <OptionsRow data-testid="cart-item-attribute-capacity">
-                              {Capacity.map((cap) => {
-                                const isSel = selected.Capacity === cap;
-                                const kebab = String(cap).toLowerCase();
-                                return (
-                                  <SizeBox
-                                    key={cap}
-                                    selected={isSel}
-                                    data-testid={
-                                      isSel
-                                        ? `cart-item-attribute-capacity-${kebab}-selected`
-                                        : `cart-item-attribute-capacity-${kebab}`
-                                    }
-                                    onClick={() => updateAttribute?.(item.id, "Capacity", cap)}
-                                  >
-                                    {cap}
-                                  </SizeBox>
-                                );
-                              })}
-                            </OptionsRow>
-                          </>
-                        )}
+                    {Capacity.length > 0 && (
+                      <>
+                        <AttributeTitle>Capacity:</AttributeTitle>
+                        <OptionsRow data-testid="cart-item-attribute-capacity">
+                          {Capacity.map((cap) => {
+                            const isSel = selected.Capacity === cap;
+                            const kebab = String(cap).toLowerCase();
+                            return (
+                              <SizeBox
+                                key={cap}
+                                selected={isSel}
+                                data-testid={
+                                  isSel
+                                    ? `cart-item-attribute-capacity-${kebab}-selected`
+                                    : `cart-item-attribute-capacity-${kebab}`
+                                }
+                                onClick={() => updateAttribute?.(item.id, "Capacity", cap)}
+                              >
+                                {cap}
+                              </SizeBox>
+                            );
+                          })}
+                        </OptionsRow>
+                      </>
+                    )}
 
-                        {Color.length > 0 && (
-                          <>
-                            <AttributeTitle>Color:</AttributeTitle>
-                            <OptionsRow data-testid="cart-item-attribute-color">
-                              {Color.map((clr) => {
-                                const colorKey = String(clr).replace("#", "").toLowerCase();
-                                const isSel = selected.Color === clr;
-                                return (
-                                  <ColorBox
-                                    key={clr}
-                                    color={clr}
-                                    selected={isSel}
-                                    data-testid={
-                                      isSel
-                                        ? `cart-item-attribute-color-${colorKey}-selected`
-                                        : `cart-item-attribute-color-${colorKey}`
-                                    }
-                                    onClick={() => updateAttribute?.(item.id, "Color", clr)}
-                                  />
-                                );
-                              })}
-                            </OptionsRow>
-                          </>
-                        )}
-                      </Left>
+                    {Color.length > 0 && (
+                      <>
+                        <AttributeTitle>Color:</AttributeTitle>
+                        <OptionsRow data-testid="cart-item-attribute-color">
+                          {Color.map((clr) => {
+                            const colorKey = String(clr).replace("#", "").toLowerCase();
+                            const isSel = selected.Color === clr;
+                            return (
+                              <ColorBox
+                                key={clr}
+                                color={clr}
+                                selected={isSel}
+                                data-testid={
+                                  isSel
+                                    ? `cart-item-attribute-color-${colorKey}-selected`
+                                    : `cart-item-attribute-color-${colorKey}`
+                                }
+                                onClick={() => updateAttribute?.(item.id, "Color", clr)}
+                              />
+                            );
+                          })}
+                        </OptionsRow>
+                      </>
+                    )}
+                  </Left>
 
-                      <RightWrapper>
-                        <Controls>
-                          <QtyBtn
-                            onClick={() => incrementQuantity(item.id)}
-                            data-testid="cart-item-amount-increase"
-                          >
-                            +
-                          </QtyBtn>
-                          <Amount data-testid="cart-item-amount">
-                            {item.quantity}
-                          </Amount>
-                          <QtyBtn
-                            onClick={() => decrementQuantity(item.id)}
-                            data-testid="cart-item-amount-decrease"
-                          >
-                            −
-                          </QtyBtn>
-                        </Controls>
-                        <Img
-                          src={item.image || item.gallery?.[0]}
-                          alt={item.name}
-                        />
-                      </RightWrapper>
-                    </Product>
-                  );
-                })}
+                  <RightWrapper>
+                    <Controls>
+                      <QtyBtn
+                        onClick={() => incrementQuantity(item.id)}
+                        data-testid="cart-item-amount-increase"
+                      >
+                        +
+                      </QtyBtn>
+                      <Amount data-testid="cart-item-amount">
+                        {item.quantity}
+                      </Amount>
+                      <QtyBtn
+                        onClick={() => decrementQuantity(item.id)}
+                        data-testid="cart-item-amount-decrease"
+                      >
+                        −
+                      </QtyBtn>
+                    </Controls>
+                    <Img src={item.image || item.gallery?.[0]} alt={item.name} />
+                  </RightWrapper>
+                </Product>
+              );
+            })}
 
-                <Total data-testid="cart-total">
-                  Total: ${total.toFixed(2)}
-                </Total>
-                <OrderButton onClick={handlePlaceOrder} disabled={cartItems.length === 0}>
-                  PLACE ORDER
-                </OrderButton>
-              </>
-            )}
-          </OverlayPanel>
-        </>
-      )}
+            <Total data-testid="cart-total">Total: ${total.toFixed(2)}</Total>
+            <OrderButton onClick={handlePlaceOrder} disabled={cartItems.length === 0}>
+              PLACE ORDER
+            </OrderButton>
+          </>
+        )}
+      </OverlayPanel>
     </Container>
   );
 }
