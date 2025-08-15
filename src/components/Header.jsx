@@ -121,7 +121,7 @@ const Header = () => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            setShowCart((prev) => !prev);
+            setShowCart(true);
           }}
         >
           <img src={CartIcon} alt="Cart Icon" width={20} height={20} />

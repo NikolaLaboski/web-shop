@@ -1,32 +1,21 @@
-// src/components/CartOverlay.jsx
 // Mini-cart overlay with a persistent container so Auto-QA can assert hidden/visible.
-// The container with data-testid="cart-overlay" is always in the DOM; visibility is toggled via inline style.
 
 import React from "react";
 import styled from "styled-components";
 import { useCart } from "../context/CartContext";
 import { useNavigate } from "react-router-dom";
 
-// was: inset: 0; (го покриваше и header-от)
 const Backdrop = styled.div`
   position: fixed;
   left: 0;
   right: 0;
-  top: 80px;     /* header height – овде НЕ го прекриваме header-от */
+  top: 80px; /* keep header visible */
   bottom: 0;
   background: rgba(57, 55, 72, 0.22);
   z-index: 998;
 `;
 
-// was:
-// position: fixed;
-// inset: 0;
-// z-index: 997;
-
-const Container = styled.div`
-  /* Keep this always mounted; visibility via inline style on the element */
-`;
-
+const Container = styled.div``;
 
 const OverlayPanel = styled.div`
   position: fixed;
@@ -47,8 +36,6 @@ const OverlayPanel = styled.div`
     padding: 16px;
   }
 `;
-
-
 
 const CloseBtn = styled.button`
   position: absolute;
@@ -118,7 +105,6 @@ const Price = styled.div` font-size: 14px; font-weight: 600; `;
 const AttributeTitle = styled.div` font-size: 12px; margin-top: 4px; `;
 const OptionsRow = styled.div` display: flex; gap: 8px; flex-wrap: wrap; `;
 
-/* Attribute badges (read-only in overlay if you remove onClick handlers) */
 const SizeBox = styled.div`
   padding: 4px 8px;
   border: 1px solid ${({ selected }) => (selected ? "#1D1F22" : "#ccc")};
@@ -173,7 +159,6 @@ const OrderButton = styled.button`
 
 /** Normalizes attribute sets to a { Size, Capacity, Color } map */
 function getAttrSetMap(item) {
-  // Legacy object shape support
   if (item && item.attributes && !Array.isArray(item.attributes)) {
     return {
       Size: item.attributes.Size || [],
@@ -181,7 +166,6 @@ function getAttrSetMap(item) {
       Color: item.attributes.Color || [],
     };
   }
-  // Standard array shape
   const map = { Size: [], Capacity: [], Color: [] };
   if (Array.isArray(item?.attributes)) {
     item.attributes.forEach((set) => {
@@ -194,21 +178,18 @@ function getAttrSetMap(item) {
   return map;
 }
 
-/**
- * CartOverlay
- * Props:
- *  - visible: boolean controls display (hidden vs visible)
- *  - onClose: callback to close the overlay (click backdrop / X button)
- */
-const CartOverlay = ({ visible = false, onClose }) => {
+export default function CartOverlay() {
   const {
     cartItems,
     incrementQuantity,
     decrementQuantity,
     updateAttribute,
-    placeOrder,  // optional: if your context implements GraphQL order mutation
-    clearCart,   // fallback if mutation is not implemented yet
+    placeOrder,
+    clearCart,
+    showCart,
+    setShowCart,
   } = useCart();
+
   const navigate = useNavigate();
 
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -216,6 +197,8 @@ const CartOverlay = ({ visible = false, onClose }) => {
     (acc, item) => acc + ((item?.prices?.[0]?.amount ?? 0) * item.quantity),
     0
   );
+
+  const close = () => setShowCart(false);
 
   const handlePlaceOrder = async () => {
     try {
@@ -225,25 +208,21 @@ const CartOverlay = ({ visible = false, onClose }) => {
         clearCart();
       }
     } finally {
-      onClose?.();
-      
-       navigate("/checkout");
+      close();
+      navigate("/checkout");
     }
   };
 
   return (
     <Container
       data-testid="cart-overlay"
-      style={{ display: visible ? "block" : "none" }}
+      style={{ display: showCart ? "block" : "none" }}
     >
-      {visible && (
+      {showCart && (
         <>
-          {/* Clicking the backdrop closes the overlay */}
-          <Backdrop onClick={onClose} />
-
-          {/* Floating panel */}
+          <Backdrop onClick={close} />
           <OverlayPanel>
-            <CloseBtn onClick={onClose}>×</CloseBtn>
+            <CloseBtn onClick={close}>×</CloseBtn>
 
             <Header>
               My Bag, {totalItems} {totalItems === 1 ? "Item" : "Items"}
@@ -265,7 +244,6 @@ const CartOverlay = ({ visible = false, onClose }) => {
                         <Name>{item.name}</Name>
                         <Price>${price.toFixed(2)}</Price>
 
-                        {/* SIZE (make read-only by removing onClick if needed by spec) */}
                         {Size.length > 0 && (
                           <>
                             <AttributeTitle>Size:</AttributeTitle>
@@ -292,7 +270,6 @@ const CartOverlay = ({ visible = false, onClose }) => {
                           </>
                         )}
 
-                        {/* CAPACITY */}
                         {Capacity.length > 0 && (
                           <>
                             <AttributeTitle>Capacity:</AttributeTitle>
@@ -319,7 +296,6 @@ const CartOverlay = ({ visible = false, onClose }) => {
                           </>
                         )}
 
-                        {/* COLOR */}
                         {Color.length > 0 && (
                           <>
                             <AttributeTitle>Color:</AttributeTitle>
@@ -376,10 +352,7 @@ const CartOverlay = ({ visible = false, onClose }) => {
                 <Total data-testid="cart-total">
                   Total: ${total.toFixed(2)}
                 </Total>
-                <OrderButton
-                  onClick={handlePlaceOrder}
-                  disabled={cartItems.length === 0}
-                >
+                <OrderButton onClick={handlePlaceOrder} disabled={cartItems.length === 0}>
                   PLACE ORDER
                 </OrderButton>
               </>
@@ -389,6 +362,4 @@ const CartOverlay = ({ visible = false, onClose }) => {
       )}
     </Container>
   );
-};
-
-export default CartOverlay;
+}
