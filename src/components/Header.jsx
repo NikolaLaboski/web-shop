@@ -1,4 +1,4 @@
-// Header.jsx
+// Header.jsx 
 import React from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import styled from "styled-components";
@@ -92,24 +92,22 @@ const Header = () => {
   return (
     <HeaderWrapper>
       <Left>
-  {categories.map((category) => {
-    const path = `/${category.toLowerCase()}`;
-    const isActive = location.pathname === path; // проверка за активна рута
-    return (
-      <NavItem
-        to={path}
-        key={category}
-        className={isActive ? "active" : ""}
-        data-testid={isActive ? "active-category-link" : "category-link"}
-        end
-      >
-        {category.toUpperCase()}
-      </NavItem>
-    );
-  })}
-</Left>
-
-
+        {categories.map((category) => {
+          const path = `/${category.toLowerCase()}`;
+          const isActive = location.pathname === path;
+          return (
+            <NavItem
+              to={path}
+              key={category}
+              className={isActive ? "active" : ""}
+              data-testid={isActive ? "active-category-link" : "category-link"}
+              end
+            >
+              {category.toUpperCase()}
+            </NavItem>
+          );
+        })}
+      </Left>
 
       <Center>
         <LogoImage src={Logo} alt="Logo" />
@@ -121,7 +119,7 @@ const Header = () => {
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            setShowCart(true);
+            setShowCart((prev) => !prev);
           }}
         >
           <img src={CartIcon} alt="Cart Icon" width={20} height={20} />
