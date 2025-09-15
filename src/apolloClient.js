@@ -1,12 +1,9 @@
-import { ApolloClient, InMemoryCache } from '@apollo/client';
+// src/apolloClient.js
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
 
-let uri = '/graphql'; // default преку Netlify proxy
+const uri = '/graphql'; 
 
-if (typeof window !== 'undefined' &&
-    window.location.protocol === 'https:' &&
-    uri.startsWith('http:')) {
-  uri = '/graphql';
-}
-
-console.log('Apollo URI =', uri); 
-export default new ApolloClient({ uri, cache: new InMemoryCache() });
+export default new ApolloClient({
+  link: new HttpLink({ uri, credentials: 'include' }),
+  cache: new InMemoryCache(),
+});
