@@ -5,13 +5,11 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-  '/graphql': {
-    target: 'http://localhost',   // <-- без :8000
-    changeOrigin: true,
-    rewrite: () => '/backend/graphql/index.php',
-    secure: false,
-  },
-},
-
-  },
+      '/graphql': {
+        target: 'https://scandi-shop-backend-production.up.railway.app',
+        changeOrigin: true,
+        secure: true
+      }
+    }
+  }
 });
