@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/graphql': {
-        target: 'https://scandi-shop-backend-production.up.railway.app',
+        target: 'https://fullstack-test-starter-production-34d9.up.railway.app/graphql',
         changeOrigin: true,
         secure: true
       }
