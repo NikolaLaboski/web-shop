@@ -6,7 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/graphql': {
-        target: 'https://fullstack-test-starter-production-34d9.up.railway.app/graphql',
+        target: 'https://fullstack-test-starter-production-34d9.up.railway.app',
         changeOrigin: true,
         secure: true
       }
