@@ -125,11 +125,17 @@ const SizeBox = styled.div`
 `;
 
 const ColorBox = styled.div`
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   background-color: ${(props) => props.$color || "#ccc"};
   border: 2px solid ${({ $selected }) => ($selected ? "#5ECE7B" : "#1D1F22")};
+  border-radius: 4px;
+  box-shadow: ${({ $selected }) =>
+    $selected ? "0 0 0 3px rgba(94, 206, 123, 0.5)" : "none"};
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
 `;
+
 
 const Controls = styled.div`
   display: flex;
