@@ -2,26 +2,31 @@
 import React from "react";
 import styled from "styled-components";
 import { useCart } from "../context/CartContext";
-import { useNavigate } from "react-router-dom";
+import { gql, useMutation } from "@apollo/client";
+
+const PLACE_ORDER = gql`
+  mutation Place($items: [OrderItemInput!]!) {
+    createOrder(items: $items)
+  }
+`;
 
 const Backdrop = styled.div`
   position: fixed;
   left: 0;
   right: 0;
-  top: 80px; /* keep header visible */
+  top: 80px;
   bottom: 0;
   background: rgba(57, 55, 72, 0.22);
   z-index: 998;
 `;
 
 const Container = styled.div`
-  /* Always mounted so tests can toggle hidden/visible */
   position: fixed;
   top: 0;
   left: 0;
   width: 1px;
   height: 1px;
-  z-index: 997; /* below panel/backdrop, above page */
+  z-index: 997;
 `;
 
 const OverlayPanel = styled.div`
@@ -190,13 +195,12 @@ export default function CartOverlay() {
     incrementQuantity,
     decrementQuantity,
     updateAttribute,
-    placeOrder,
     clearCart,
     showCart,
     setShowCart,
   } = useCart();
 
-  const navigate = useNavigate();
+  const [placeOrder, { loading }] = useMutation(PLACE_ORDER);
 
   const totalItems = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const total = cartItems.reduce(
@@ -207,15 +211,24 @@ export default function CartOverlay() {
   const close = () => setShowCart(false);
 
   const handlePlaceOrder = async () => {
+    if (cartItems.length === 0) return;
+    const items = cartItems.map(ci => ({
+      product_id: ci.id,
+      quantity: ci.quantity,
+    }));
+
     try {
-      if (typeof placeOrder === "function") {
-        await placeOrder(cartItems);
-      } else if (typeof clearCart === "function") {
-        clearCart();
+      const { data } = await placeOrder({ variables: { items } });
+      if (data?.createOrder) {
+        clearCart?.();
+        close();
+        alert("Order placed");
+      } else {
+        alert("Order failed");
       }
-    } finally {
-      close();
-      navigate("/checkout");
+    } catch (e) {
+      console.error(e);
+      alert("Error placing order");
     }
   };
 
@@ -359,8 +372,11 @@ export default function CartOverlay() {
                 <Total data-testid="cart-total">
                   Total: ${total.toFixed(2)}
                 </Total>
-                <OrderButton onClick={handlePlaceOrder} disabled={cartItems.length === 0}>
-                  PLACE ORDER
+                <OrderButton
+                  onClick={handlePlaceOrder}
+                  disabled={loading || cartItems.length === 0}
+                >
+                  {loading ? "PLACING…" : "PLACE ORDER"}
                 </OrderButton>
               </>
             )}
