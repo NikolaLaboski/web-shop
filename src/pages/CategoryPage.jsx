@@ -127,11 +127,10 @@ const OutOfStockBadge = styled.span`
   text-transform: uppercase;
   pointer-events: none;
 `;
-
 const AddToCartButton = styled.button`
   position: absolute;
-  right: 28px;
-  bottom: 142px;
+  top: 190px;
+  right: 12px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -141,20 +140,24 @@ const AddToCartButton = styled.button`
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 14px rgba(94,206,123,.35);
+  z-index: 3;                
 
   svg { color: #fff; font-size: 18px; }
+
 
   opacity: 0;
   visibility: hidden;
   transform: translateY(6px);
   transition: opacity .25s ease, transform .25s ease, visibility 0s;
 
+  
   ${CardWrapper}:hover & {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
   }
 `;
+
 
 
 const ProductContent = styled.div`
