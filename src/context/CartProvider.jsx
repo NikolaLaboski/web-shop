@@ -15,8 +15,11 @@ export const CartProvider = ({ children }) => {
       Color: ["#f0f0f0", "#000", "#0f6657"],
     };
     const attributes = product.attributes ?? defaultAttributes;
+
+    // preserve Capacity too
     const filledSelected = {
       Size: selectedAttributes.Size ?? null,
+      Capacity: selectedAttributes.Capacity ?? null,
       Color: selectedAttributes.Color ?? null,
     };
 
