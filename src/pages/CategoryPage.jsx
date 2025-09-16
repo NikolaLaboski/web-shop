@@ -96,8 +96,8 @@ const OutOfStockBadge = styled.span`
 
 const AddToCartButton = styled.button`
   position: absolute;
-  right: 28px;
-  bottom: 142px;
+  right: 16px;
+  bottom: -26px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
