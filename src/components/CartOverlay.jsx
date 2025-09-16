@@ -59,8 +59,9 @@ const CloseBtn = styled.button`
   font-weight: bold;
   cursor: pointer;
   color: #333;
-
-  &:hover { color: #e60023; }
+  &:hover {
+    color: #e60023;
+  }
 `;
 
 const Header = styled.h3`
@@ -111,25 +112,38 @@ const Img = styled.img`
   }
 `;
 
-const Name = styled.div` font-size: 16px; font-weight: 500; `;
-const Price = styled.div` font-size: 14px; font-weight: 600; `;
+const Name = styled.div`
+  font-size: 16px;
+  font-weight: 500;
+`;
+const Price = styled.div`
+  font-size: 14px;
+  font-weight: 600;
+`;
 
-const AttributeTitle = styled.div` font-size: 12px; margin-top: 4px; `;
-const OptionsRow = styled.div` display: flex; gap: 8px; flex-wrap: wrap; `;
+const AttributeTitle = styled.div`
+  font-size: 12px;
+  margin-top: 4px;
+`;
+const OptionsRow = styled.div`
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+`;
 
 const SizeBox = styled.div`
   padding: 4px 8px;
-  border: 1px solid ${({ selected }) => (selected ? "#1D1F22" : "#ccc")};
+  border: 1px solid ${({ $selected }) => ($selected ? "#1D1F22" : "#ccc")};
   font-size: 12px;
-  background: ${({ selected }) => (selected ? "#1D1F22" : "white")};
-  color: ${({ selected }) => (selected ? "white" : "#1D1F22")};
+  background: ${({ $selected }) => ($selected ? "#1D1F22" : "white")};
+  color: ${({ $selected }) => ($selected ? "white" : "#1D1F22")};
 `;
 
 const ColorBox = styled.div`
   width: 16px;
   height: 16px;
-  background-color: ${(props) => props.color || "#ccc"};
-  border: 2px solid ${({ selected }) => (selected ? "#5ECE7B" : "#1D1F22")};
+  background-color: ${(props) => props.$color || "#ccc"};
+  border: 2px solid ${({ $selected }) => ($selected ? "#5ECE7B" : "#1D1F22")};
 `;
 
 const Controls = styled.div`
@@ -140,13 +154,21 @@ const Controls = styled.div`
 `;
 
 const QtyBtn = styled.button`
-  width: 32px; height: 32px;
-  font-size: 18px; font-weight: bold;
-  background: white; border: 1px solid #1D1F22; cursor: pointer;
-  &:hover { background: #eee; }
+  width: 32px;
+  height: 32px;
+  font-size: 18px;
+  font-weight: bold;
+  background: white;
+  border: 1px solid #1D1F22;
+  cursor: pointer;
+  &:hover {
+    background: #eee;
+  }
 `;
 
-const Amount = styled.div` font-size: 14px; `;
+const Amount = styled.div`
+  font-size: 14px;
+`;
 
 const Total = styled.div`
   font-weight: bold;
@@ -166,28 +188,55 @@ const OrderButton = styled.button`
   border: none;
   cursor: pointer;
   border-radius: 4px;
-  &:disabled { background-color: #ccc; cursor: not-allowed; }
+  &:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
 `;
 
+// -------- Helpers --------
 function getAttrSetMap(item) {
   if (item && item.attributes && !Array.isArray(item.attributes)) {
+    const toItems = (arr = []) =>
+      (arr || []).map((v) => ({
+        id: String(v),
+        value: String(v),
+        displayValue: String(v),
+      }));
     return {
-      Size: item.attributes.Size || [],
-      Capacity: item.attributes.Capacity || [],
-      Color: item.attributes.Color || [],
+      Size: toItems(item.attributes.Size),
+      Capacity: toItems(item.attributes.Capacity),
+      Color: toItems(item.attributes.Color),
     };
   }
   const map = { Size: [], Capacity: [], Color: [] };
   if (Array.isArray(item?.attributes)) {
     item.attributes.forEach((set) => {
       const name = (set.name || "").toLowerCase();
-      if (name === "size") map.Size = (set.items || []).map((it) => it.displayValue || it.value);
-      if (name === "capacity") map.Capacity = (set.items || []).map((it) => it.displayValue || it.value);
-      if (name === "color") map.Color = (set.items || []).map((it) => it.value);
+      const items = (set.items || []).map((it) => ({
+        id: it.id ?? it.value ?? it.displayValue,
+        value: it.value,
+        displayValue: it.displayValue ?? it.value,
+      }));
+      if (name === "size") map.Size = items;
+      if (name === "capacity") map.Capacity = items;
+      if (name === "color") map.Color = items;
     });
   }
   return map;
 }
+
+const isSelected = (selectedVal, it) => {
+  if (selectedVal && typeof selectedVal === "object") {
+    const sid = selectedVal.id ?? selectedVal.value ?? selectedVal.displayValue;
+    const iid = it.id ?? it.value ?? it.displayValue;
+    return String(sid) === String(iid);
+  }
+  const sval = String(selectedVal ?? "");
+  const ival = String(it.displayValue ?? it.value ?? it.id ?? "");
+  return sval === ival;
+};
+// -------- End Helpers --------
 
 export default function CartOverlay() {
   const {
@@ -212,7 +261,7 @@ export default function CartOverlay() {
 
   const handlePlaceOrder = async () => {
     if (cartItems.length === 0) return;
-    const items = cartItems.map(ci => ({
+    const items = cartItems.map((ci) => ({
       product_id: ci.id,
       quantity: ci.quantity,
     }));
@@ -268,21 +317,25 @@ export default function CartOverlay() {
                           <>
                             <AttributeTitle>Size:</AttributeTitle>
                             <OptionsRow data-testid="cart-item-attribute-size">
-                              {Size.map((size) => {
-                                const isSel = selected.Size === size;
-                                const kebab = String(size).toLowerCase();
+                              {Size.map((it) => {
+                                const isSel = isSelected(selected.Size, it);
+                                const kebab = String(
+                                  it.displayValue || it.value
+                                ).toLowerCase();
                                 return (
                                   <SizeBox
-                                    key={size}
-                                    selected={isSel}
+                                    key={it.id}
+                                    $selected={isSel}
                                     data-testid={
                                       isSel
                                         ? `cart-item-attribute-size-${kebab}-selected`
                                         : `cart-item-attribute-size-${kebab}`
                                     }
-                                    onClick={() => updateAttribute?.(item.id, "Size", size)}
+                                    onClick={() =>
+                                      updateAttribute?.(item.id, "Size", it)
+                                    }
                                   >
-                                    {size}
+                                    {it.displayValue || it.value}
                                   </SizeBox>
                                 );
                               })}
@@ -294,21 +347,25 @@ export default function CartOverlay() {
                           <>
                             <AttributeTitle>Capacity:</AttributeTitle>
                             <OptionsRow data-testid="cart-item-attribute-capacity">
-                              {Capacity.map((cap) => {
-                                const isSel = selected.Capacity === cap;
-                                const kebab = String(cap).toLowerCase();
+                              {Capacity.map((it) => {
+                                const isSel = isSelected(selected.Capacity, it);
+                                const kebab = String(
+                                  it.displayValue || it.value
+                                ).toLowerCase();
                                 return (
                                   <SizeBox
-                                    key={cap}
-                                    selected={isSel}
+                                    key={it.id}
+                                    $selected={isSel}
                                     data-testid={
                                       isSel
                                         ? `cart-item-attribute-capacity-${kebab}-selected`
                                         : `cart-item-attribute-capacity-${kebab}`
                                     }
-                                    onClick={() => updateAttribute?.(item.id, "Capacity", cap)}
+                                    onClick={() =>
+                                      updateAttribute?.(item.id, "Capacity", it)
+                                    }
                                   >
-                                    {cap}
+                                    {it.displayValue || it.value}
                                   </SizeBox>
                                 );
                               })}
@@ -320,20 +377,27 @@ export default function CartOverlay() {
                           <>
                             <AttributeTitle>Color:</AttributeTitle>
                             <OptionsRow data-testid="cart-item-attribute-color">
-                              {Color.map((clr) => {
-                                const colorKey = String(clr).replace("#", "").toLowerCase();
-                                const isSel = selected.Color === clr;
+                              {Color.map((it) => {
+                                const colorKey = String(
+                                  (it.value || it.displayValue || "").replace(
+                                    "#",
+                                    ""
+                                  )
+                                ).toLowerCase();
+                                const isSel = isSelected(selected.Color, it);
                                 return (
                                   <ColorBox
-                                    key={clr}
-                                    color={clr}
-                                    selected={isSel}
+                                    key={it.id}
+                                    $color={it.value}
+                                    $selected={isSel}
                                     data-testid={
                                       isSel
                                         ? `cart-item-attribute-color-${colorKey}-selected`
                                         : `cart-item-attribute-color-${colorKey}`
                                     }
-                                    onClick={() => updateAttribute?.(item.id, "Color", clr)}
+                                    onClick={() =>
+                                      updateAttribute?.(item.id, "Color", it)
+                                    }
                                   />
                                 );
                               })}
