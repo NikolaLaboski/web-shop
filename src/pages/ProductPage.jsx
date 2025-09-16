@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { useCart } from "../context/CartContext";
 import { useQuery, gql } from "@apollo/client";
+import DOMPurify from "dompurify";
 
 const GET_PRODUCT = gql`
   query GetProduct($id: String!) {
@@ -26,8 +27,8 @@ const GET_PRODUCT = gql`
 
 const THUMB_W = 84;
 const GAP = 16;
-/* ---------- Styled ---------- */
 
+/* ---------- Styled ---------- */
 const Container = styled.div`
   padding: 40px 24px;
   max-width: 1200px;
@@ -80,7 +81,7 @@ const Thumbs = styled.div`
     align-items: stretch;
     overflow-y: auto;
     padding-right: 2px;
-    z-index: 2; /* below Arrow (3) */
+    z-index: 2;
   }
 `;
 
@@ -111,17 +112,17 @@ const Arrow = styled.button`
   position: absolute;
   top: 12px;
   left: 12px;
-  ${p => p.$right && "left: auto; right: 12px;"}
+  ${(p) => p.$right && "left: auto; right: 12px;"}
   padding: 8px 10px;
   border: 0;
   border-radius: 8px;
   background: rgba(0,0,0,0.6);
   color: #fff;
   cursor: pointer;
-  z-index: 3; /* always above thumbs/main image */
+  z-index: 3;
 
   @media (min-width: 900px) {
-    ${p => !p.$right && `left: calc(${THUMB_W + GAP}px + 12px);`}
+    ${(p) => !p.$right && `left: calc(${THUMB_W + GAP}px + 12px);`}
   }
 `;
 
@@ -198,7 +199,9 @@ function normalizeGallery(g) {
     try {
       const p = JSON.parse(g);
       if (Array.isArray(p)) return p;
-    } catch {}
+    } catch {
+      // ignore parse errors
+    }
     const parts = g
       .split(/[\s,]+/)
       .map((s) => s.trim())
@@ -207,45 +210,7 @@ function normalizeGallery(g) {
   }
   return [];
 }
-function parseDescriptionSafe(html = "") {
-  if (!html || typeof html !== "string") return null;
-  const normalized = html.replace(/<br\s*\/?>/gi, "\n");
-  const temp = document.createElement("div");
-  temp.innerHTML = normalized;
-  const nodes = [];
-  temp.childNodes.forEach((node, idx) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const t = node.textContent.trim();
-      if (t) nodes.push(<p key={`t-${idx}`}>{t}</p>);
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      const tag = node.tagName.toLowerCase();
-      if (tag === "p") {
-        nodes.push(<p key={`p-${idx}`}>{node.textContent}</p>);
-      } else if (tag === "ul") {
-        nodes.push(
-          <ul key={`ul-${idx}`}>
-            {Array.from(node.children).map((li, i) => (
-              <li key={i}>{li.textContent}</li>
-            ))}
-          </ul>
-        );
-      } else if (tag === "ol") {
-        nodes.push(
-          <ol key={`ol-${idx}`}>
-            {Array.from(node.children).map((li, i) => (
-              <li key={i}>{li.textContent}</li>
-            ))}
-          </ol>
-        );
-      } else {
-        nodes.push(<p key={`f-${idx}`}>{node.textContent}</p>);
-      }
-    }
-  });
-  return <>{nodes}</>;
-}
 function testIdValue(x) {
-  // Keep exact text (tests match exact "512G", "Green", or "#44FF03")
   return String(x ?? "").trim();
 }
 /* ---------- End Helpers ---------- */
@@ -260,12 +225,13 @@ export default function ProductPage() {
     nextFetchPolicy: "cache-first",
   });
 
-  // hooks first
   const [imageIndex, setImageIndex] = useState(0);
   const [selectedAttributes, setSelectedAttributes] = useState({});
 
   const product = data?.product;
-  const attrs = product?.attributes ?? [];
+
+  const attrs = useMemo(() => product?.attributes ?? [], [product?.attributes]);
+
   const gallery = useMemo(
     () => normalizeGallery(product?.gallery),
     [product?.gallery]
@@ -320,7 +286,11 @@ export default function ProductPage() {
     }
   };
 
-  // early returns after hooks
+  const safeDescription = useMemo(
+    () => DOMPurify.sanitize(product?.description || ""),
+    [product?.description]
+  );
+
   if (loading) return <Container><p>Loading…</p></Container>;
   if (error) return <Container><p>Error: {error.message}</p></Container>;
   if (!product) return <Container><p>Product not found.</p></Container>;
@@ -427,7 +397,7 @@ export default function ProductPage() {
           </AddBtn>
 
           <Group data-testid="product-description" style={{ marginTop: 24 }}>
-            {parseDescriptionSafe(product.description)}
+            <div dangerouslySetInnerHTML={{ __html: safeDescription }} />
           </Group>
         </Info>
       </Layout>
