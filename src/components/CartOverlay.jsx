@@ -236,6 +236,13 @@ const isSelected = (selectedVal, it) => {
   const ival = String(it.displayValue ?? it.value ?? it.id ?? "");
   return sval === ival;
 };
+
+// NEW: robust selected getter for different casings
+const getSelectedForKey = (selected, key) =>
+  selected?.[key] ??
+  selected?.[key.toLowerCase()] ??
+  selected?.[key.toUpperCase()] ??
+  null;
 // -------- End Helpers --------
 
 export default function CartOverlay() {
@@ -348,7 +355,10 @@ export default function CartOverlay() {
                             <AttributeTitle>Capacity:</AttributeTitle>
                             <OptionsRow data-testid="cart-item-attribute-capacity">
                               {Capacity.map((it) => {
-                                const isSel = isSelected(selected.Capacity, it);
+                                const isSel = isSelected(
+                                  getSelectedForKey(selected, "Capacity"),
+                                  it
+                                );
                                 const kebab = String(
                                   it.displayValue || it.value
                                 ).toLowerCase();
