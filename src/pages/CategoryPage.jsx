@@ -129,7 +129,7 @@ const OutOfStockBadge = styled.span`
 `;
 const AddToCartButton = styled.button`
   position: absolute;
-  bottom: -6px;
+  bottom: 1px;
   right: 12px;
   width: 52px;
   height: 52px;
