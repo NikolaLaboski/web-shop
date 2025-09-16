@@ -23,81 +23,115 @@ const GET_PRODUCTS = gql`
   }
 `;
 
-const Grid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
-  padding: 24px 48px;
-  justify-items: center;
+/* ---------- Layout / Figma-like spacing ---------- */
+const Page = styled.div`
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 24px 64px;
 
-  @media (max-width: 1024px) {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  @media (max-width: 640px) {
-    grid-template-columns: 1fr;
+  @media (min-width: 1280px) {
+    max-width: 1120px;
   }
 `;
 
 const CategoryTitle = styled.h2`
-  font-size: 24px;
   font-weight: 400;
+  font-size: 42px;
+  line-height: 1.2;
   color: #1d1f22;
-  margin: 24px 0 12px 0;
-  padding-left: 48px;
+  margin: 24px 0 24px 8px;
 
-  @media (max-width: 640px) {
-    padding-left: 20px;
-    font-size: 20px;
+  @media (max-width: 900px) {
+    font-size: 32px;
+    margin-left: 0;
   }
 `;
 
+const Grid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(320px, 1fr));
+  column-gap: 40px;
+  row-gap: 56px;
+  align-items: start;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+    column-gap: 32px;
+    row-gap: 48px;
+  }
+  @media (max-width: 680px) {
+    grid-template-columns: 1fr;
+    row-gap: 40px;
+  }
+`;
+
+/* ---------- Card ---------- */
 const CardWrapper = styled.div`
   position: relative;
   width: 100%;
-  max-width: 220px;
-  background: white;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 1px solid #e0e0e0;
-  transition: all 0.2s ease;
-  aspect-ratio: 3 / 4;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  max-width: 386px;      /* Figma width */
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #eee;           /* subtle edge like Figma */
+  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 
   &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.08);
+    border-color: #e6e6e6;
+
+    ${/* show button on hover */""}
+    button[data-quick-add] {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
   }
 
-  a { text-decoration: none; }
+  a { text-decoration: none; color: inherit; display: block; }
 `;
 
 const ProductImageWrap = styled.div`
   position: relative;
+  padding: 16px;
+`;
+
+const ProductImageFrame = styled.div`
+  width: 100%;
+  height: 330px;                     /* ~Figma image height inside card */
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f3f3f3;
 `;
 
 const ProductImage = styled.img`
   width: 100%;
-  aspect-ratio: 1 / 1;
+  height: 100%;
   object-fit: cover;
-  filter: ${({ $dimmed }) => ($dimmed ? "grayscale(100%) opacity(0.6)" : "none")};
+  filter: ${({ $dimmed }) => ($dimmed ? "grayscale(100%) opacity(.6)" : "none")};
 `;
 
 const OutOfStockBadge = styled.span`
   position: absolute;
   left: 50%;
-  top: 50%;
-  transform: translate(-50%,-50%);
-  background: rgba(255,255,255,0.9);
+  top: calc(16px + 165px); /* center over image area */
+  transform: translate(-50%, -50%);
+  background: rgba(255,255,255,0.92);
   color: #8d8f9a;
   font-size: 14px;
+  letter-spacing: .06em;
   padding: 6px 10px;
   border-radius: 4px;
+  text-transform: uppercase;
+  pointer-events: none;
 `;
 
 const AddToCartButton = styled.button`
   position: absolute;
-  right: 16px;
-  bottom: -26px;
+  right: 28px;
+  bottom: 142px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -107,49 +141,44 @@ const AddToCartButton = styled.button`
   align-items: center;
   justify-content: center;
   box-shadow: 0 8px 14px rgba(94,206,123,.35);
-  z-index: 3;
 
   svg { color: #fff; font-size: 18px; }
 
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  transition: opacity .25s ease, transform .25s ease;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(6px);
+  transition: opacity .25s ease, transform .25s ease, visibility 0s;
 
-  @media (hover: hover) and (pointer: fine) {
-    opacity: 0;
+  ${CardWrapper}:hover & {
+    opacity: 1;
     visibility: visible;
-    transform: translateY(6px);
-
-    ${CardWrapper}:hover & {
-      opacity: 1;
-      transform: translateY(0);
-    }
+    transform: translateY(0);
   }
 `;
 
+
 const ProductContent = styled.div`
-  padding: 12px;
-  text-align: left;
+  padding: 8px 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
 `;
 
 const ProductName = styled.h3`
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #1d1f22;
   margin: 0;
+  font-weight: 300;
+  font-size: 18px;
+  color: #1d1f22;
 `;
 
 const ProductPrice = styled.p`
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #1d1f22;
   margin: 0;
+  font-weight: 500;
+  font-size: 16px;
+  color: #1d1f22;
 `;
 
+/* ---------- Utils ---------- */
 function kebabCase(s = "") {
   return String(s).trim().toLowerCase().replace(/\s+/g, "-");
 }
@@ -164,6 +193,7 @@ function getDefaultSelections(attributes = []) {
   return selected;
 }
 
+/* ---------- Page ---------- */
 const CategoryPage = () => {
   const { categoryName } = useParams();
   const location = useLocation();
@@ -174,16 +204,17 @@ const CategoryPage = () => {
   const cat = (categoryName || urlSlug || "all").toLowerCase();
   const capitalizedCategory = cat.charAt(0).toUpperCase() + cat.slice(1);
 
-  if (loading) return <p style={{ padding: "48px" }}>Loading...</p>;
-  if (error) return <p style={{ padding: "48px" }}>Error: {error.message}</p>;
+  if (loading) return <Page><CategoryTitle>Loading…</CategoryTitle></Page>;
+  if (error) return <Page><CategoryTitle>Error: {error.message}</CategoryTitle></Page>;
 
   const products = cat === "all"
     ? data.products
     : data.products.filter(p => (p.category || "").toLowerCase() === cat);
 
   return (
-    <>
+    <Page>
       <CategoryTitle>{capitalizedCategory}</CategoryTitle>
+
       <Grid>
         {products.map((product) => {
           const price = product.prices?.[0]?.amount ?? 0;
@@ -195,6 +226,7 @@ const CategoryPage = () => {
             <CardWrapper key={product.id} data-testid={testId}>
               {inStock && (
                 <AddToCartButton
+                  data-quick-add
                   onClick={() => {
                     addToCart({
                       ...product,
@@ -212,14 +244,17 @@ const CategoryPage = () => {
 
               <Link to={`/product/${product.id}`}>
                 <ProductImageWrap>
-                  <ProductImage
-                    src={
-                      product.gallery?.[0] ||
-                      `https://via.placeholder.com/220x220.png?text=${encodeURIComponent(product.name)}`
-                    }
-                    alt={product.name}
-                    $dimmed={!inStock}
-                  />
+                  <ProductImageFrame>
+                    <ProductImage
+                      src={
+                        product.gallery?.[0] ||
+                        `https://via.placeholder.com/386x330.png?text=${encodeURIComponent(product.name)}`
+                      }
+                      alt={product.name}
+                      $dimmed={!inStock}
+                    />
+                  </ProductImageFrame>
+
                   {!inStock && (
                     <OutOfStockBadge data-testid="product-out-of-stock">
                       OUT OF STOCK
@@ -236,7 +271,7 @@ const CategoryPage = () => {
           );
         })}
       </Grid>
-    </>
+    </Page>
   );
 };
 
