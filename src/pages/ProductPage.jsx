@@ -11,6 +11,7 @@ const GET_PRODUCT = gql`
     product(id: $id) {
       id
       name
+      inStock
       description
       category
       gallery
@@ -62,6 +63,7 @@ const MainImage = styled.img`
   background: #f7f7f7;
   border-radius: 12px;
   display: block;
+  opacity: ${(p) => (p.$dimmed ? 0.5 : 1)};
 `;
 
 const Thumbs = styled.div`
@@ -229,6 +231,7 @@ export default function ProductPage() {
   const [selectedAttributes, setSelectedAttributes] = useState({});
 
   const product = data?.product;
+  const inStock = product?.inStock !== false; // <-- додадено
 
   const attrs = useMemo(() => product?.attributes ?? [], [product?.attributes]);
 
@@ -279,6 +282,7 @@ export default function ProductPage() {
     setImageIndex((prev) => (prev === gallery.length - 1 ? 0 : prev + 1));
 
   const add = () => {
+    if (!inStock) return; // <-- додадено: блокирај ако е out of stock
     const img = gallery[imageIndex] || "";
     if (product) {
       addToCart({ ...product, image: img, prices: product.prices }, selectedAttributes);
@@ -301,7 +305,7 @@ export default function ProductPage() {
         <GalleryWrap data-testid="product-gallery">
           {gallery.length > 0 && (
             <>
-              <MainImage src={gallery[imageIndex]} alt={product.name} />
+              <MainImage src={gallery[imageIndex]} alt={product.name} $dimmed={!inStock} />
               {gallery.length > 1 && (
                 <>
                   <Arrow onClick={handlePrev} aria-label="Prev">‹</Arrow>
@@ -389,11 +393,13 @@ export default function ProductPage() {
 
           <AddBtn
             data-testid="add-to-cart"
-            disabled={!canAdd}
+            disabled={!canAdd || !inStock} // <-- додадено
             onClick={add}
-            aria-disabled={!canAdd}
+            aria-disabled={!canAdd || !inStock} // <-- додадено
           >
-            {canAdd ? "Add to Cart" : "Select required options"}
+            {!inStock
+              ? "Out of stock"
+              : (canAdd ? "Add to Cart" : "Select required options")}
           </AddBtn>
 
           <Group data-testid="product-description" style={{ marginTop: 24 }}>
