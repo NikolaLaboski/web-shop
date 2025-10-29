@@ -25,40 +25,45 @@ const GET_PRODUCTS = gql`
 
 /* ---------- Layout / Figma-like spacing ---------- */
 const Page = styled.div`
-  max-width: 1200px;
+  /* Figma canvas е 1440; содржината ~1240 со по ~100px странични маргини */
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 24px 24px 64px;
+  padding: 0 100px 80px; /* без топ-падинг, простор долу */
 
-  @media (min-width: 1280px) {
-    max-width: 1120px;
+  @media (max-width: 1280px) {
+    max-width: 100%;
+    padding: 0 24px 64px;
   }
 `;
 
 const CategoryTitle = styled.h2`
+  /* Figma: Raleway 42 / 160% / weight 400 / #1D1F22 */
   font-weight: 400;
   font-size: 42px;
-  line-height: 1.2;
+  line-height: 160%;
   color: #1d1f22;
-  margin: 24px 0 24px 8px;
+
+  /* Поголем „воздух“ од хедерот и чист лев раб */
+  margin: 160px 0 40px 0;
 
   @media (max-width: 900px) {
     font-size: 32px;
-    margin-left: 0;
+    margin: 100px 0 28px 0;
   }
 `;
 
 const Grid = styled.div`
   display: grid;
-  grid-template-columns: repeat(3, minmax(320px, 1fr));
-  column-gap: 40px;
-  row-gap: 56px;
-  align-items: start;
+  grid-template-columns: repeat(3, 386px); /* точната Figma ширина на картите */
+  justify-content: space-between;          /* рамномерно по ширина */
+  row-gap: 56px;                           /* вертикално растојание од Figma */
 
-  @media (max-width: 1100px) {
+  @media (max-width: 1200px) {
     grid-template-columns: repeat(2, minmax(300px, 1fr));
     column-gap: 32px;
     row-gap: 48px;
   }
+
   @media (max-width: 680px) {
     grid-template-columns: 1fr;
     row-gap: 40px;
@@ -69,39 +74,33 @@ const Grid = styled.div`
 const CardWrapper = styled.div`
   position: relative;
   width: 100%;
-  max-width: 386px;      /* Figma width */
-  margin: 0 auto;
+  height: 444px;                  /* Figma висина */
   background: #fff;
-  border-radius: 8px;
-  border: 1px solid #eee;           /* subtle edge like Figma */
-  box-shadow: 0 2px 6px rgba(0,0,0,0.04);
-  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
 
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 18px rgba(0,0,0,0.08);
-    border-color: #e6e6e6;
+  /* IMPORTANT: Figma card нема border и нема radius */
+  border: none;
+  border-radius: 0;
 
-    ${/* show button on hover */""}
-    button[data-quick-add] {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-  }
+  /* Figma shadow: 0 0 35 rgba(168,172,176,0.19) постојано (не само на hover) */
+  box-shadow: 0 0 35px rgba(168, 172, 176, 0.19);
+
+  /* Нема подигнување/бордер промена на hover во Figma.
+     Оставаме само reveal на quick-add копчето. */
+  transition: opacity .2s ease;
 
   a { text-decoration: none; color: inherit; display: block; }
 `;
 
 const ProductImageWrap = styled.div`
   position: relative;
-  padding: 16px;
+  /* во Figma сликата е edge-to-edge во рамката, без внатрешен padding */
+  padding: 0;
 `;
 
 const ProductImageFrame = styled.div`
   width: 100%;
-  height: 330px;                     /* ~Figma image height inside card */
-  border-radius: 6px;
+  height: 330px;      /* визуелната висина на image area */
+  border-radius: 0;   /* нема radius во Figma */
   overflow: hidden;
   background: #f3f3f3;
 `;
@@ -116,21 +115,23 @@ const ProductImage = styled.img`
 const OutOfStockBadge = styled.span`
   position: absolute;
   left: 50%;
-  top: calc(16px + 165px); /* center over image area */
+  top: 50%;                          /* точно во центар */
   transform: translate(-50%, -50%);
-  background: rgba(255,255,255,0.92);
-  color: #8d8f9a;
-  font-size: 14px;
-  letter-spacing: .06em;
+  background: rgba(255, 255, 255, 0.92);
+  color: rgba(141, 143, 154, 1);     /* Figma сива */
+  font-weight: 400;
+  font-size: 24px;                   /* поголем текст */
+  letter-spacing: 0;
   padding: 6px 10px;
-  border-radius: 4px;
+  border-radius: 0;                  /* без заоблување */
   text-transform: uppercase;
   pointer-events: none;
 `;
+
 const AddToCartButton = styled.button`
   position: absolute;
-  bottom: 60px;
-  right: 12px;
+  bottom: 16px;  /* поблиску до аголот */
+  right: 16px;
   width: 52px;
   height: 52px;
   border-radius: 50%;
@@ -139,18 +140,16 @@ const AddToCartButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 14px rgba(94,206,123,.35);
-  z-index: 3;                
+  box-shadow: 0 8px 14px rgba(94, 206, 123, .35);
+  z-index: 3;
 
   svg { color: #fff; font-size: 18px; }
-
 
   opacity: 0;
   visibility: hidden;
   transform: translateY(6px);
   transition: opacity .25s ease, transform .25s ease, visibility 0s;
 
-  
   ${CardWrapper}:hover & {
     opacity: 1;
     visibility: visible;
@@ -158,10 +157,9 @@ const AddToCartButton = styled.button`
   }
 `;
 
-
-
 const ProductContent = styled.div`
-  padding: 8px 16px 20px;
+  /* чист текст простор под сликата, без внатрешни рамки */
+  padding: 12px 0 0;
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -229,17 +227,17 @@ const CategoryPage = () => {
             <CardWrapper key={product.id} data-testid={testId}>
               {inStock && (
                 <AddToCartButton
-                  data-quick-add
-                  onClick={() => {
-                    addToCart({
-                      ...product,
-                      selectedAttributes: defaults,
-                      attributes: product.attributes || [],
-                    });
-                    setShowCart(true);
-                  }}
-                  title="Add to Cart"
-                  aria-label={`Quick add ${product.name}`}
+                    data-quick-add
+                    onClick={() => {
+                      addToCart({
+                        ...product,
+                        selectedAttributes: defaults,
+                        attributes: product.attributes || [],
+                      });
+                      setShowCart(true);
+                    }}
+                    title="Add to Cart"
+                    aria-label={`Quick add ${product.name}`}
                 >
                   <FaShoppingCart />
                 </AddToCartButton>

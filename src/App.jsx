@@ -51,17 +51,17 @@ const App = () => {
       <CartOverlay visible={showCart} onClose={() => setShowCart(false)} />
 
       
-<Routes>
-  <Route path="/" element={<Navigate to="/all" />} />
-  <Route path="/category" element={<Navigate to="/all" />} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/all" />} />
+        <Route path="/category" element={<Navigate to="/all" />} />
 
-  {/* both forms work */}
-  <Route path="/:categoryName" element={<CategoryPage />} />
-  <Route path="/category/:categoryName" element={<CategoryPage />} />
+        {/* both forms work */}
+        <Route path="/:categoryName" element={<CategoryPage />} />
+        <Route path="/category/:categoryName" element={<CategoryPage />} />
 
-  <Route path="/product/:id" element={<ProductPage />} />
-  <Route path="/checkout" element={<CheckoutPage />} />
-</Routes>
+        <Route path="/product/:id" element={<ProductPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+      </Routes>
 
 
 
